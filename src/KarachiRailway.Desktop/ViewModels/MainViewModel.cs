@@ -5,6 +5,11 @@ using KarachiRailway.Desktop.Playback;
 using KarachiRailway.Simulation.Engine;
 using KarachiRailway.Simulation.Models;
 
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
+
 namespace KarachiRailway.Desktop.ViewModels;
 
 /// <summary>Navigation tabs for the sidebar.</summary>
@@ -12,11 +17,7 @@ public enum AppTab { Home, Model, Metrics, Reports, Settings, About }
 
 public enum SimulationState { Idle, Running, Paused, Completed }
 
-public class ChartDataPoint
-{
-    public double Value { get; set; }
-    public double NormalizedHeight { get; set; }
-}
+
 
 /// <summary>
 /// Main view model for the Karachi Railway Simulation desktop application.
@@ -37,7 +38,7 @@ public sealed class MainViewModel : ViewModelBase
     private const int MaxVisibleTokens = 15;
 
     public ObservableCollection<Passenger> ActivePassengers { get; } = new();
-    public ObservableCollection<ChartDataPoint> ChartData { get; } = new();
+
 
     public MainViewModel()
     {
@@ -300,16 +301,34 @@ public sealed class MainViewModel : ViewModelBase
     }
 
     // ── Metrics chart data (Metrics tab) ─────────────────────────────────────
-    // Normalised bar heights (0..1) for utilization across runs
-    public ObservableCollection<ChartDataPoint> ChartRhoValues     { get; } = new();
-    public ObservableCollection<ChartDataPoint> ChartWqValues      { get; } = new();
-    public ObservableCollection<ChartDataPoint> ChartThroughput    { get; } = new();
-    public ObservableCollection<string> ChartRunLabels     { get; } = new();
-    // Max values for scaling
-    private double _chartMaxWq = 1.0;
-    public double ChartMaxWq { get => _chartMaxWq; private set => SetProperty(ref _chartMaxWq, value); }
-    private double _chartMaxThroughput = 1.0;
-    public double ChartMaxThroughput { get => _chartMaxThroughput; private set => SetProperty(ref _chartMaxThroughput, value); }
+    public ISeries[] WaitTimeTrend { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Wait Time (Wq)",
+            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 6,
+            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] QueueLengthTrend { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Queue Length (Lq)",
+            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 6,
+            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
+        }
+    };
+
+    public Axis[] XAxes { get; } = new Axis[] { new Axis { Labels = new ObservableCollection<string>() } };
+    public Axis[] YAxes { get; } = new Axis[] { new Axis { Labeler = value => value.ToString("0.00") } };
 
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
@@ -548,6 +567,16 @@ public sealed class MainViewModel : ViewModelBase
             _result       = result;
             PlaybackTotal = Math.Max(1, events.Count);
             ApplyResult(result);
+            SaveRunToHistory(result);
+            BuildModellingTable(result);
+            
+            CompletedPassengers.Clear();
+            foreach (var p in result.Passengers)
+            {
+                CompletedPassengers.Add(p);
+            }
+
+            UpdateChartData();
 
             if (TraceModeEnabled)
             {
@@ -705,16 +734,6 @@ public sealed class MainViewModel : ViewModelBase
         if (_result != null)
         {
             PlainSummary = BuildPlainSummary(_result);
-            SaveRunToHistory(_result);
-            BuildModellingTable(_result);
-            
-            CompletedPassengers.Clear();
-            foreach (var p in _result.Passengers)
-            {
-                CompletedPassengers.Add(p);
-            }
-
-            UpdateChartData();
         }
 
         State = SimulationState.Completed;
@@ -838,24 +857,23 @@ public sealed class MainViewModel : ViewModelBase
 
     private void UpdateChartData()
     {
-        ChartRhoValues.Clear();
-        ChartWqValues.Clear();
-        ChartThroughput.Clear();
-        ChartRunLabels.Clear();
-
-        // Show last 8 runs (newest last)
-        var runs = RunHistory.Reverse().Take(8).ToList();
-        double maxWq = runs.Count > 0 ? runs.Max(r => r.Wq) : 1.0;
-        double maxTp = runs.Count > 0 ? runs.Max(r => r.Throughput) : 1.0;
-        ChartMaxWq         = Math.Max(maxWq, 0.001);
-        ChartMaxThroughput = Math.Max(maxTp, 0.001);
-
-        foreach (var r in runs)
+        if (WaitTimeTrend[0].Values is ObservableCollection<double> waitValues &&
+            QueueLengthTrend[0].Values is ObservableCollection<double> queueValues &&
+            XAxes[0].Labels is ObservableCollection<string> labels)
         {
-            ChartRhoValues.Add(new ChartDataPoint { Value = r.Rho, NormalizedHeight = r.Rho * 140 });
-            ChartWqValues.Add(new ChartDataPoint { Value = r.Wq, NormalizedHeight = (r.Wq / ChartMaxWq) * 140 });
-            ChartThroughput.Add(new ChartDataPoint { Value = r.Throughput, NormalizedHeight = (r.Throughput / ChartMaxThroughput) * 140 });
-            ChartRunLabels.Add($"#{r.RunNumber}");
+            waitValues.Clear();
+            queueValues.Clear();
+            labels.Clear();
+
+            // Show last 10 runs for trend
+            var runs = RunHistory.Reverse().Take(10).Reverse().ToList();
+            
+            foreach (var r in runs)
+            {
+                waitValues.Add(r.Wq);
+                queueValues.Add(r.Lq);
+                labels.Add($"Run {r.RunNumber}");
+            }
         }
     }
 

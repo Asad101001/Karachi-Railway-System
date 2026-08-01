@@ -174,12 +174,12 @@
         <!-- ══ TEXTBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="ParamTextBox" TargetType="TextBox">
             <Setter Property="Background"        Value="#050E05"/>
-            <Setter Property="Foreground"        Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Foreground"        Value="#FFFFFF"/>
             <Setter Property="BorderBrush"       Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness"   Value="1"/>
             <Setter Property="Padding"           Value="8,6"/>
             <Setter Property="FontSize"          Value="13"/>
-            <Setter Property="FontFamily"        Value="Segoe UI"/>
+            <Setter Property="FontFamily"        Value="{StaticResource OutfitFont}"/>
             <Setter Property="MinWidth"          Value="90"/>
             <Setter Property="CaretBrush"        Value="{StaticResource AccentGreenBrush}"/>
             <Setter Property="SelectionBrush"    Value="{StaticResource AccentGreenBrush}"/>
@@ -449,12 +449,12 @@
         <!-- ══ COMBOBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="SpeedComboBox" TargetType="ComboBox">
             <Setter Property="Background"      Value="#050E05"/>
-            <Setter Property="Foreground"      Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Foreground"      Value="#FFFFFF"/>
             <Setter Property="BorderBrush"     Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding"         Value="8,6"/>
             <Setter Property="FontSize"        Value="13"/>
-            <Setter Property="FontFamily"      Value="Segoe UI"/>
+            <Setter Property="FontFamily"      Value="{StaticResource OutfitFont}"/>
             <Setter Property="MinWidth"        Value="70"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>

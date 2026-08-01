@@ -11,8 +11,8 @@ The application supports three single-server queue models (M/M/1, M/G/1, G/G/1) 
 - **Sidebar Navigation**: Replaced the previous 3-column layout with a sleek icon-based sidebar, featuring six main tabs:
   - **🏠 Home**: Real-time Animated Flow Diagram and quick KPI tracking.
   - **🧮 Model**: A detailed column-wise **M/M/1 Simulation Table** allowing users to inspect probabilities, inter-arrival times, service times, and wait times row by row.
-  - **📈 Metrics**: Visual bar charts for Server Utilization (ρ), Average Queue Wait ($W_q$), and Throughput across multiple simulation runs.
-  - **📋 Reports**: A comprehensive DataGrid history of all simulation runs in the current session.
+  - **📈 Metrics**: Visual Cartesian charts powered by `LiveChartsCore` for Average Queue Wait ($W_q$) Trend and Average Queue Length ($L_q$) Trend across the latest simulation runs.
+  - **📋 Reports**: A comprehensive DataGrid history of all simulation runs in the current session, complete with customer-level records featuring individual arrival times, wait times, turnaround times, and drill-down "View" actions.
   - **⚙ Settings**: Expanded parameters configuration and playback controls.
   - **ℹ About**: University / Department branding and model description.
 - **Live Performance KPIs**: Quick-glance KPI strip providing metrics like Utilization ($\rho$), Wait times ($W_q, W$), Queue Lengths ($L_q, L$), and System Throughput.

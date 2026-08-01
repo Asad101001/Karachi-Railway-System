@@ -8,7 +8,7 @@ public class Passenger
     public int Id { get; init; }
 
     /// <summary>Formatted ID for UI presentation (e.g., C001).</summary>
-    public string CustomerId => $"C{Id:D3}";
+    public string CustomerId => $"CUS-{Id:D4}";
 
     /// <summary>Simulation-time (minutes) when the passenger arrived.</summary>
     public double ArrivalTime { get; init; }
