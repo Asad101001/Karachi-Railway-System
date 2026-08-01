@@ -1,4 +1,4 @@
-﻿<Application x:Class="KarachiRailway.Desktop.App"
+<Application x:Class="KarachiRailway.Desktop.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:KarachiRailway.Desktop"
@@ -16,63 +16,90 @@
         <conv:UtilizationToBrushConverter       x:Key="UtilToBrush"/>
         <conv:MultiplyConverter                 x:Key="Multiply"/>
 
-        <!-- ══ COLOR PALETTE ════════════════════════════════════════════════ -->
-        <!-- Background layers -->
-        <Color x:Key="BackgroundDeep">#080D1A</Color>
-        <Color x:Key="BackgroundCard">#0D1B33</Color>
-        <Color x:Key="BackgroundPanel">#0A1525</Color>
-        <Color x:Key="BackgroundElevated">#12203A</Color>
-        <!-- Accent palette -->
-        <Color x:Key="AccentBlue">#3B82F6</Color>
-        <Color x:Key="AccentBlueBright">#60A5FA</Color>
+        <!-- ══ GREEN + GOLD COLOR PALETTE ═══════════════════════════════════ -->
+        <!-- Background layers — deep forest green -->
+        <Color x:Key="BackgroundDeep">#060F06</Color>
+        <Color x:Key="BackgroundCard">#0B1A0C</Color>
+        <Color x:Key="BackgroundPanel">#091508</Color>
+        <Color x:Key="BackgroundElevated">#102014</Color>
+        <Color x:Key="BackgroundSidebar">#071209</Color>
+
+        <!-- Primary green accents -->
         <Color x:Key="AccentGreen">#22C55E</Color>
         <Color x:Key="AccentGreenBright">#4ADE80</Color>
+        <Color x:Key="AccentGreenDim">#15803D</Color>
+        <Color x:Key="AccentGreenSoft">#166534</Color>
+
+        <!-- Gold / yellow accents -->
+        <Color x:Key="AccentGold">#EAB308</Color>
+        <Color x:Key="AccentGoldBright">#FDE047</Color>
+        <Color x:Key="AccentGoldDim">#A16207</Color>
         <Color x:Key="AccentAmber">#F59E0B</Color>
-        <Color x:Key="AccentAmberBright">#FCD34D</Color>
+
+        <!-- Supporting colours -->
         <Color x:Key="AccentRed">#EF4444</Color>
         <Color x:Key="AccentRedBright">#F87171</Color>
-        <!-- Text -->
-        <Color x:Key="TextPrimary">#F1F5F9</Color>
-        <Color x:Key="TextSecondary">#94A3B8</Color>
-        <Color x:Key="TextMuted">#475569</Color>
-        <!-- Border -->
-        <Color x:Key="Border">#1E3A5F</Color>
-        <Color x:Key="BorderHover">#2D5B9E</Color>
+        <Color x:Key="AccentBlue">#3B82F6</Color>
+        <Color x:Key="AccentBlueBright">#60A5FA</Color>
 
-        <!-- ── Brushes ──────────────────────────────────────────────────── -->
+        <!-- Text -->
+        <Color x:Key="TextPrimary">#F0FFF4</Color>
+        <Color x:Key="TextSecondary">#86EFAC</Color>
+        <Color x:Key="TextMuted">#4B7A5C</Color>
+
+        <!-- Borders -->
+        <Color x:Key="Border">#1A4A20</Color>
+        <Color x:Key="BorderHover">#22C55E</Color>
+        <Color x:Key="BorderGold">#A16207</Color>
+
+        <!-- ── Solid Brushes ──────────────────────────────────────────────── -->
         <SolidColorBrush x:Key="BackgroundDeepBrush"     Color="{StaticResource BackgroundDeep}"/>
         <SolidColorBrush x:Key="BackgroundCardBrush"     Color="{StaticResource BackgroundCard}"/>
         <SolidColorBrush x:Key="BackgroundPanelBrush"    Color="{StaticResource BackgroundPanel}"/>
         <SolidColorBrush x:Key="BackgroundElevatedBrush" Color="{StaticResource BackgroundElevated}"/>
-        <SolidColorBrush x:Key="AccentBlueBrush"         Color="{StaticResource AccentBlue}"/>
-        <SolidColorBrush x:Key="AccentBlueBrightBrush"   Color="{StaticResource AccentBlueBright}"/>
+        <SolidColorBrush x:Key="BackgroundSidebarBrush"  Color="{StaticResource BackgroundSidebar}"/>
         <SolidColorBrush x:Key="AccentGreenBrush"        Color="{StaticResource AccentGreen}"/>
         <SolidColorBrush x:Key="AccentGreenBrightBrush"  Color="{StaticResource AccentGreenBright}"/>
+        <SolidColorBrush x:Key="AccentGreenDimBrush"     Color="{StaticResource AccentGreenDim}"/>
+        <SolidColorBrush x:Key="AccentGoldBrush"         Color="{StaticResource AccentGold}"/>
+        <SolidColorBrush x:Key="AccentGoldBrightBrush"   Color="{StaticResource AccentGoldBright}"/>
         <SolidColorBrush x:Key="AccentAmberBrush"        Color="{StaticResource AccentAmber}"/>
         <SolidColorBrush x:Key="AccentRedBrush"          Color="{StaticResource AccentRed}"/>
+        <SolidColorBrush x:Key="AccentBlueBrush"         Color="{StaticResource AccentBlue}"/>
+        <SolidColorBrush x:Key="AccentBlueBrightBrush"   Color="{StaticResource AccentBlueBright}"/>
         <SolidColorBrush x:Key="TextPrimaryBrush"        Color="{StaticResource TextPrimary}"/>
         <SolidColorBrush x:Key="TextSecondaryBrush"      Color="{StaticResource TextSecondary}"/>
         <SolidColorBrush x:Key="TextMutedBrush"          Color="{StaticResource TextMuted}"/>
         <SolidColorBrush x:Key="BorderBrush"             Color="{StaticResource Border}"/>
         <SolidColorBrush x:Key="BorderHoverBrush"        Color="{StaticResource BorderHover}"/>
+        <SolidColorBrush x:Key="BorderGoldBrush"         Color="{StaticResource BorderGold}"/>
 
-        <!-- Gradient brushes for subtle depth -->
+        <!-- Gradient brushes -->
         <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#0D1B33" Offset="0.0"/>
-            <GradientStop Color="#0A1525" Offset="0.5"/>
-            <GradientStop Color="#0D1B33" Offset="1.0"/>
+            <GradientStop Color="#0B1A0C" Offset="0.0"/>
+            <GradientStop Color="#091508" Offset="0.5"/>
+            <GradientStop Color="#0B1A0C" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="SidebarGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#071209" Offset="0.0"/>
+            <GradientStop Color="#060F06" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="CardGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#0D1B33" Offset="0.0"/>
-            <GradientStop Color="#080D1A" Offset="1.0"/>
+            <GradientStop Color="#0D1F0F" Offset="0.0"/>
+            <GradientStop Color="#060F06" Offset="1.0"/>
         </LinearGradientBrush>
-        <LinearGradientBrush x:Key="AccentButtonGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#3B82F6" Offset="0.0"/>
-            <GradientStop Color="#1D4ED8" Offset="1.0"/>
+        <LinearGradientBrush x:Key="GoldAccentGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#EAB308" Offset="0.0"/>
+            <GradientStop Color="#FDE047" Offset="0.5"/>
+            <GradientStop Color="#EAB308" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="GreenButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#22C55E" Offset="0.0"/>
             <GradientStop Color="#15803D" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="GoldButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#EAB308" Offset="0.0"/>
+            <GradientStop Color="#A16207" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="AmberButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#F59E0B" Offset="0.0"/>
@@ -81,6 +108,15 @@
         <LinearGradientBrush x:Key="RedButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#EF4444" Offset="0.0"/>
             <GradientStop Color="#B91C1C" Offset="1.0"/>
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key="AccentButtonGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#22C55E" Offset="0.0"/>
+            <GradientStop Color="#15803D" Offset="1.0"/>
+        </LinearGradientBrush>
+        <!-- Sidebar active tab indicator gradient -->
+        <LinearGradientBrush x:Key="SidebarActiveGradient" StartPoint="0,0" EndPoint="1,0">
+            <GradientStop Color="#22C55E22" Offset="0.0"/>
+            <GradientStop Color="#22C55E44" Offset="1.0"/>
         </LinearGradientBrush>
 
         <!-- ══ EASING FUNCTIONS ══════════════════════════════════════════════ -->
@@ -106,9 +142,9 @@
         </Style>
         <Style x:Key="HeadingSmall" TargetType="TextBlock">
             <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="11"/>
-            <Setter Property="FontWeight"  Value="SemiBold"/>
-            <Setter Property="Foreground"  Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="FontSize"          Value="11"/>
+            <Setter Property="FontWeight"        Value="SemiBold"/>
+            <Setter Property="Foreground"        Value="{StaticResource AccentGoldBrush}"/>
         </Style>
         <Style x:Key="BodyText" TargetType="TextBlock">
             <Setter Property="FontFamily"   Value="Segoe UI"/>
@@ -130,7 +166,7 @@
 
         <!-- ══ TEXTBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="ParamTextBox" TargetType="TextBox">
-            <Setter Property="Background"        Value="#080D1A"/>
+            <Setter Property="Background"        Value="#050E05"/>
             <Setter Property="Foreground"        Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="BorderBrush"       Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness"   Value="1"/>
@@ -138,8 +174,8 @@
             <Setter Property="FontSize"          Value="13"/>
             <Setter Property="FontFamily"        Value="Segoe UI"/>
             <Setter Property="MinWidth"          Value="90"/>
-            <Setter Property="CaretBrush"        Value="{StaticResource AccentBlueBrush}"/>
-            <Setter Property="SelectionBrush"    Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="CaretBrush"        Value="{StaticResource AccentGreenBrush}"/>
+            <Setter Property="SelectionBrush"    Value="{StaticResource AccentGreenBrush}"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -161,7 +197,7 @@
                                         <ColorAnimation
                                             Storyboard.TargetName="Border"
                                             Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
-                                            To="{StaticResource AccentBlue}"
+                                            To="{StaticResource AccentGreen}"
                                             Duration="0:0:0.2">
                                             <ColorAnimation.EasingFunction>
                                                 <CubicEase EasingMode="EaseOut"/>
@@ -193,6 +229,87 @@
             <Setter Property="FontSize"          Value="13"/>
             <Setter Property="Foreground"        Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ══ SIDEBAR NAV BUTTON ════════════════════════════════════════════ -->
+        <Style x:Key="SideNavButton" TargetType="Button">
+            <Setter Property="FontFamily"         Value="Segoe UI"/>
+            <Setter Property="FontSize"           Value="20"/>
+            <Setter Property="FontWeight"         Value="Regular"/>
+            <Setter Property="BorderThickness"    Value="0"/>
+            <Setter Property="Width"              Value="68"/>
+            <Setter Property="Height"             Value="62"/>
+            <Setter Property="Cursor"             Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                CornerRadius="0"
+                                BorderThickness="3,0,0,0"
+                                BorderBrush="Transparent">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock x:Name="Icon"
+                                           Text="{TemplateBinding Content}"
+                                           FontSize="22"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#4B7A5C"/>
+                                <TextBlock x:Name="Label"
+                                           Text="{TemplateBinding Tag}"
+                                           FontFamily="Segoe UI"
+                                           FontSize="9"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#4B7A5C"
+                                           Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd"     Property="Background" Value="#22C55E18"/>
+                                <Setter TargetName="Bd"     Property="BorderBrush" Value="#22C55E55"/>
+                                <Setter TargetName="Icon"   Property="Foreground" Value="#86EFAC"/>
+                                <Setter TargetName="Label"  Property="Foreground" Value="#86EFAC"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Active variant control template -->
+        <ControlTemplate x:Key="SideNavActiveTemplate" TargetType="Button">
+            <Border x:Name="Bd"
+                    Background="{StaticResource SidebarActiveGradient}"
+                    CornerRadius="0"
+                    BorderThickness="3,0,0,0"
+                    BorderBrush="{StaticResource AccentGreenBrush}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{TemplateBinding Content}"
+                               FontSize="22"
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource AccentGreenBrush}"/>
+                    <TextBlock Text="{TemplateBinding Tag}"
+                               FontFamily="Segoe UI"
+                               FontSize="9"
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource AccentGreenBrush}"
+                               Margin="0,3,0,0"/>
+                </StackPanel>
+            </Border>
+        </ControlTemplate>
+
+        <!-- Active variant of sidebar nav button -->
+        <Style x:Key="SideNavButtonActive" TargetType="Button" BasedOn="{StaticResource SideNavButton}">
+            <Setter Property="Template" Value="{StaticResource SideNavActiveTemplate}"/>
         </Style>
 
         <!-- ══ BUTTON BASE ═══════════════════════════════════════════════════ -->
@@ -235,7 +352,6 @@
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
-                <!-- Hover: scale up + shadow glow -->
                 <EventTrigger RoutedEvent="Mouse.MouseEnter">
                     <BeginStoryboard>
                         <Storyboard>
@@ -252,7 +368,6 @@
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
-                <!-- Leave: scale back -->
                 <EventTrigger RoutedEvent="Mouse.MouseLeave">
                     <BeginStoryboard>
                         <Storyboard>
@@ -269,7 +384,6 @@
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
-                <!-- Click: quick press-down from current scale -->
                 <EventTrigger RoutedEvent="Button.Click">
                     <BeginStoryboard>
                         <Storyboard>
@@ -309,7 +423,7 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonResume" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
-            <Setter Property="Background" Value="{StaticResource AccentButtonGradient}"/>
+            <Setter Property="Background" Value="{StaticResource GreenButtonGradient}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ButtonStop" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
@@ -320,11 +434,15 @@
             <Setter Property="Background" Value="{StaticResource BackgroundElevatedBrush}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
         </Style>
+        <Style x:Key="ButtonGold" TargetType="Button" BasedOn="{StaticResource ButtonBase}">
+            <Setter Property="Background" Value="{StaticResource GoldButtonGradient}"/>
+            <Setter Property="Foreground" Value="#0A1A0A"/>
+        </Style>
 
         <!-- ══ COMBOBOX ═══════════════════════════════════════════════════════ -->
         <Style x:Key="SpeedComboBox" TargetType="ComboBox">
-            <Setter Property="Background"      Value="#080D1A"/>
-            <Setter Property="Foreground"      Value="White"/>
+            <Setter Property="Background"      Value="#050E05"/>
+            <Setter Property="Foreground"      Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="BorderBrush"     Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding"         Value="8,6"/>
@@ -361,7 +479,7 @@
                                     <Path Grid.Column="1"
                                           Data="M 0 0 L 8 0 L 4 5 Z"
                                           Width="8" Height="5"
-                                          Fill="{TemplateBinding Foreground}"
+                                          Fill="{StaticResource AccentGoldBrush}"
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"/>
                                 </Grid>
@@ -374,7 +492,7 @@
                                    IsOpen="{TemplateBinding IsDropDownOpen}"
                                    PopupAnimation="Slide">
                                 <Border Background="{StaticResource BackgroundPanelBrush}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="6"
                                         MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
@@ -407,7 +525,7 @@
                                 <Setter Property="Background" Value="{StaticResource BackgroundElevatedBrush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource AccentBlueBrush}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentGreenDimBrush}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </Style.Triggers>
@@ -433,8 +551,8 @@
         <!-- ══ PROGRESS BAR ═══════════════════════════════════════════════════ -->
         <Style x:Key="SimProgressBar" TargetType="ProgressBar">
             <Setter Property="Height"           Value="6"/>
-            <Setter Property="Background"       Value="#1E3A5F"/>
-            <Setter Property="Foreground"       Value="{StaticResource AccentBlueBrush}"/>
+            <Setter Property="Background"       Value="#112211"/>
+            <Setter Property="Foreground"       Value="{StaticResource AccentGreenBrush}"/>
             <Setter Property="BorderThickness"  Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -450,7 +568,7 @@
                                     HorizontalAlignment="Left"
                                     Background="{TemplateBinding Foreground}">
                                 <Border.Effect>
-                                    <DropShadowEffect Color="#3B82F6"
+                                    <DropShadowEffect Color="#22C55E"
                                                       ShadowDepth="0"
                                                       BlurRadius="6"
                                                       Opacity="0.7"/>
@@ -462,6 +580,32 @@
             </Setter>
         </Style>
 
+        <!-- ══ MODELLING TABLE HEADER CELL ═══════════════════════════════════ -->
+        <Style x:Key="TableHeaderCell" TargetType="TextBlock">
+            <Setter Property="FontFamily"   Value="Segoe UI"/>
+            <Setter Property="FontSize"     Value="10"/>
+            <Setter Property="FontWeight"   Value="Bold"/>
+            <Setter Property="Foreground"   Value="{StaticResource AccentGoldBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="TableDataCell" TargetType="TextBlock">
+            <Setter Property="FontFamily"   Value="Consolas"/>
+            <Setter Property="FontSize"     Value="11"/>
+            <Setter Property="Foreground"   Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- ══ KPI CARD ═══════════════════════════════════════════════════════ -->
+        <Style x:Key="KpiCard" TargetType="Border">
+            <Setter Property="CornerRadius"    Value="10"/>
+            <Setter Property="Padding"         Value="14,12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background"      Value="{StaticResource BackgroundElevatedBrush}"/>
+            <Setter Property="BorderBrush"     Value="{StaticResource BorderBrush}"/>
+        </Style>
+
     </Application.Resources>
 </Application>
-

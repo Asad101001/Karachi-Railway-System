@@ -1,39 +1,22 @@
 # Karachi Railway System — Queue Simulation Suite
 
 Desktop simulation software for Karachi Railway, built with C# and WPF on .NET 8.
-The application now supports three single-server queue models:
-
-- M/M/1
-- M/G/1
-- G/G/1
-
-Users select the model after the welcome screen, then run the passenger-flow simulation with live playback, metrics, and step-by-step inspection.
+The application supports three single-server queue models (M/M/1, M/G/1, G/G/1) and features a dynamic UI for exploring passenger flow, live metrics, and comprehensive simulation tables.
 
 ---
 
-## What’s New (Recent Changes)
+## What’s New (Recent Updates)
 
-- Added model-selection screen after welcome: choose M/M/1, M/G/1, or G/G/1.
-- Extended simulation engine for model-specific sampling:
-  - M/M/1: exponential arrivals + exponential service
-  - M/G/1: exponential arrivals + general service (gamma)
-  - G/G/1: general arrivals + general service (gamma)
-- Added queue metrics calculator for MM1/MG1/GG1 (MM1 exact, MG1 P-K, GG1 Kingman approximation).
-- Added welcome splash with logo and fade-out sequence.
-- Added tabbed center area:
-  - Flow Diagram
-  - Block Flow (real-time customer-in-block view)
-- Added scalable controls:
-  - Flow Size (inside Flow Diagram tab)
-  - Block Size (inside Block Flow tab)
-- Added Next Step playback mode (single-event stepping):
-  - Button in controls
-  - Keyboard shortcuts: Ctrl+N and Ctrl+Right Arrow
-- Added collapsible side panels (settings/metrics) with title-bar toggle buttons.
-- Updated application branding:
-  - Custom logo in title bar and splash
-  - EXE/window icon configured from assets
-- Updated dark ComboBox styling and spacing polish for side-panel scroll content.
+- **Complete UI/UX Overhaul**: Adopted a premium Forest Green and Gold color palette, replacing the former blue theme, providing a more modern and striking aesthetic.
+- **Sidebar Navigation**: Replaced the previous 3-column layout with a sleek icon-based sidebar, featuring six main tabs:
+  - **🏠 Home**: Real-time Animated Flow Diagram and quick KPI tracking.
+  - **🧮 Model**: A detailed column-wise **M/M/1 Simulation Table** allowing users to inspect probabilities, inter-arrival times, service times, and wait times row by row.
+  - **📈 Metrics**: Visual bar charts for Server Utilization (ρ), Average Queue Wait ($W_q$), and Throughput across multiple simulation runs.
+  - **📋 Reports**: A comprehensive DataGrid history of all simulation runs in the current session.
+  - **⚙ Settings**: Expanded parameters configuration and playback controls.
+  - **ℹ About**: University / Department branding and model description.
+- **Live Performance KPIs**: Quick-glance KPI strip providing metrics like Utilization ($\rho$), Wait times ($W_q, W$), Queue Lengths ($L_q, L$), and System Throughput.
+- **Playback Controls**: Refined simulation playback with Play, Pause, Step-through, Stop, and Speed controls (0.25x to 2x).
 
 ---
 
@@ -44,43 +27,18 @@ Users select the model after the welcome screen, then run the passenger-flow sim
 
 ---
 
-## Project Structure
-
-```
-KarachiRailwaySystem.slnx
-├── src/
-│   ├── KarachiRailway.Simulation/
-│   │   ├── Models/
-│   │   │   ├── QueueModelType.cs
-│   │   │   ├── SimulationParameters.cs
-│   │   │   ├── SimulationResult.cs
-│   │   │   ├── Passenger.cs
-│   │   │   ├── PassengerStep.cs
-│   │   │   └── PlaybackEvent.cs
-│   │   └── Engine/
-│   │       ├── MM1Calculator.cs
-│   │       ├── QueueMetricsCalculator.cs
-│   │       ├── PassengerFlowEngine.cs
-│   │       └── SimulationRunner.cs
-│   └── KarachiRailway.Desktop/
-│       ├── Assets/
-│       ├── Playback/
-│       ├── ViewModels/
-│       ├── Converters/
-│       ├── App.xaml
-│       └── MainWindow.xaml
-└── tests/
-    └── KarachiRailway.Tests/
-```
-
----
-
 ## Run Locally
+
+You can launch the application directly using the .NET CLI:
 
 ```bash
 dotnet build KarachiRailwaySystem.slnx
+dotnet run --project src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj -c Debug
+```
+
+To run unit tests:
+```bash
 dotnet test KarachiRailwaySystem.slnx -c Debug
-dotnet run --project src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj
 ```
 
 ---
@@ -88,35 +46,19 @@ dotnet run --project src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj
 ## Model Behavior
 
 ### M/M/1
-
-- Inter-arrival times: exponential (λ)
-- Service times: exponential (μ)
+- Inter-arrival times: exponential ($\lambda$)
+- Service times: exponential ($\mu$)
 - Uses standard M/M/1 exact formulas.
 
 ### M/G/1
-
-- Inter-arrival times: exponential (λ)
-- Service times: general (gamma), controlled by Service CV (Cs)
+- Inter-arrival times: exponential ($\lambda$)
+- Service times: general (gamma), controlled by Service CV ($C_s$)
 - Uses Pollaczek–Khinchine-based metrics.
 
 ### G/G/1
-
-- Inter-arrival times: general (gamma), controlled by Arrival CV (Ca)
-- Service times: general (gamma), controlled by Service CV (Cs)
+- Inter-arrival times: general (gamma), controlled by Arrival CV ($C_a$)
+- Service times: general (gamma), controlled by Service CV ($C_s$)
 - Uses Kingman approximation for waiting-time metrics.
-
----
-
-## UI Workflow
-
-1. Welcome splash (logo + fade-out)
-2. Model selection screen
-3. Main dashboard:
-   - Left: settings + controls
-   - Center: flow/block tabs with scalable views
-   - Right: live and analytical metrics
-
-Key controls include Start, Pause, Resume, Next Step, Stop, and Reset.
 
 ---
 
@@ -124,33 +66,27 @@ Key controls include Start, Pause, Resume, Next Step, Stop, and Reset.
 
 Generate a Windows x64 self-contained single-file executable:
 
-```bash
+```powershell
 Get-Process KarachiRailway.Desktop -ErrorAction SilentlyContinue | Stop-Process -Force
-dotnet publish src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj \
-  -c Release -r win-x64 --self-contained true \
-  /p:PublishSingleFile=true \
-  /p:PublishTrimmed=false \
+dotnet publish src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj `
+  -c Release -r win-x64 --self-contained true `
+  /p:PublishSingleFile=true `
+  /p:PublishTrimmed=false `
   /p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-Output EXE:
-
+**Output EXE location:**
 `src/KarachiRailway.Desktop/bin/Release/net8.0-windows/win-x64/publish/KarachiRailway.Desktop.exe`
 
 ---
 
-## Testing
+## Project Structure
 
-Current tests include:
-
-- MM1 analytical checks
-- Model-aware queue metrics checks (MM1/MG1/GG1)
-- Passenger flow branch coverage
-- Simulation runner correctness and cancellation behavior
-
-Run all tests:
-
-```bash
-dotnet test KarachiRailwaySystem.slnx -c Debug
 ```
-
+KarachiRailwaySystem.slnx
+├── src/
+│   ├── KarachiRailway.Simulation/    # Core queue mathematics and logic
+│   └── KarachiRailway.Desktop/       # WPF Application (ViewModels, Views, UI)
+└── tests/
+    └── KarachiRailway.Tests/         # Unit testing suite
+```

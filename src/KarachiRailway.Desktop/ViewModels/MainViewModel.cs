@@ -7,6 +7,9 @@ using KarachiRailway.Simulation.Models;
 
 namespace KarachiRailway.Desktop.ViewModels;
 
+/// <summary>Navigation tabs for the sidebar.</summary>
+public enum AppTab { Home, Model, Metrics, Reports, Settings, About }
+
 public enum SimulationState { Idle, Running, Paused, Completed }
 
 /// <summary>
@@ -51,6 +54,7 @@ public sealed class MainViewModel : ViewModelBase
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
         SelectModelCommand      = new RelayCommand(SelectModel);
+        NavigateCommand         = new RelayCommand(NavigateTo);
 
         _playback.EventApplied      += OnEventApplied;
         _playback.PlaybackCompleted += OnPlaybackCompleted;
@@ -213,6 +217,65 @@ public sealed class MainViewModel : ViewModelBase
 
     public double EffectiveDiagramZoom => DiagramZoom * AutoZoomFactor;
     public double EffectiveBlockScale => BlockScale * AutoZoomFactor;
+
+    // ── Sidebar navigation ───────────────────────────────────────────────────
+    private AppTab _activeTab = AppTab.Home;
+    public AppTab ActiveTab
+    {
+        get => _activeTab;
+        set
+        {
+            if (SetProperty(ref _activeTab, value))
+            {
+                OnPropertyChanged(nameof(IsTabHome));
+                OnPropertyChanged(nameof(IsTabModel));
+                OnPropertyChanged(nameof(IsTabMetrics));
+                OnPropertyChanged(nameof(IsTabReports));
+                OnPropertyChanged(nameof(IsTabSettings));
+                OnPropertyChanged(nameof(IsTabAbout));
+            }
+        }
+    }
+    public bool IsTabHome     => ActiveTab == AppTab.Home;
+    public bool IsTabModel    => ActiveTab == AppTab.Model;
+    public bool IsTabMetrics  => ActiveTab == AppTab.Metrics;
+    public bool IsTabReports  => ActiveTab == AppTab.Reports;
+    public bool IsTabSettings => ActiveTab == AppTab.Settings;
+    public bool IsTabAbout    => ActiveTab == AppTab.About;
+
+    private void NavigateTo(object? param)
+    {
+        if (param is string s && Enum.TryParse<AppTab>(s, out var tab))
+            ActiveTab = tab;
+    }
+
+    // ── Run History (Reports tab) ─────────────────────────────────────────────
+    private int _runCounter = 0;
+    public ObservableCollection<SimulationRunSummary> RunHistory { get; } = new();
+
+    // ── Modelling Table (Model tab) ───────────────────────────────────────────
+    public ObservableCollection<ModellingRowViewModel> ModellingRows { get; } = new();
+
+    private double _modellingAvgWait;
+    public double ModellingAvgWait { get => _modellingAvgWait; private set => SetProperty(ref _modellingAvgWait, value); }
+    private double _modellingAvgTurnaround;
+    public double ModellingAvgTurnaround { get => _modellingAvgTurnaround; private set => SetProperty(ref _modellingAvgTurnaround, value); }
+    private double _modellingAvgResponse;
+    public double ModellingAvgResponse { get => _modellingAvgResponse; private set => SetProperty(ref _modellingAvgResponse, value); }
+    private double _modellingAvgInterArrival;
+    public double ModellingAvgInterArrival { get => _modellingAvgInterArrival; private set => SetProperty(ref _modellingAvgInterArrival, value); }
+
+    // ── Metrics chart data (Metrics tab) ─────────────────────────────────────
+    // Normalised bar heights (0..1) for utilization across runs
+    public ObservableCollection<double> ChartRhoValues     { get; } = new();
+    public ObservableCollection<double> ChartWqValues      { get; } = new();
+    public ObservableCollection<double> ChartThroughput    { get; } = new();
+    public ObservableCollection<string> ChartRunLabels     { get; } = new();
+    // Max values for scaling
+    private double _chartMaxWq = 1.0;
+    public double ChartMaxWq { get => _chartMaxWq; private set => SetProperty(ref _chartMaxWq, value); }
+    private double _chartMaxThroughput = 1.0;
+    public double ChartMaxThroughput { get => _chartMaxThroughput; private set => SetProperty(ref _chartMaxThroughput, value); }
 
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
@@ -420,9 +483,10 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand StepCommand   { get; }
     public ICommand StopCommand   { get; }
     public ICommand ResetCommand  { get; }
-    public ICommand ToggleLeftPanelCommand { get; }
+    public ICommand ToggleLeftPanelCommand  { get; }
     public ICommand ToggleRightPanelCommand { get; }
-    public ICommand SelectModelCommand { get; }
+    public ICommand SelectModelCommand      { get; }
+    public ICommand NavigateCommand         { get; }
 
     private async Task StartSimulationAsync()
     {
@@ -603,10 +667,153 @@ public sealed class MainViewModel : ViewModelBase
         _passengerCurrentNodes.Clear();
 
         if (_result != null)
+        {
             PlainSummary = BuildPlainSummary(_result);
+            SaveRunToHistory(_result);
+            BuildModellingTable(_result);
+            UpdateChartData();
+        }
 
         State = SimulationState.Completed;
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void SaveRunToHistory(SimulationResult r)
+    {
+        _runCounter++;
+        var model = SelectedQueueModel switch
+        {
+            QueueModelType.MM1 => "M/M/1",
+            QueueModelType.MG1 => "M/G/1",
+            QueueModelType.GG1 => "G/G/1",
+            _                  => "M/M/1",
+        };
+        RunHistory.Insert(0, new SimulationRunSummary
+        {
+            RunNumber      = _runCounter,
+            ModelName      = model,
+            Lambda         = ArrivalRate,
+            Mu             = ServiceRate,
+            Rho            = r.Utilization,
+            Lq             = r.AvgQueueLength,
+            Wq             = r.AvgQueueWaitTime,
+            W              = r.AvgSystemTime,
+            L              = r.AvgNumberInSystem,
+            TotalServed    = r.TotalCompleted,
+            TotalLeft      = r.TotalLeft,
+            TotalArrived   = r.TotalArrived,
+            Throughput     = r.Throughput,
+            CompletionPct  = r.CompletionRate,
+            SimDuration    = r.SimulationDurationMinutes,
+            Timestamp      = DateTime.Now.ToString("HH:mm:ss"),
+        });
+    }
+
+    /// <summary>
+    /// Builds a realistic M/M/1 per-customer modelling table.
+    /// Uses Poisson arrivals and exponential service times derived from
+    /// lambda / mu parameters, mirroring the reference spreadsheet layout.
+    /// </summary>
+    private void BuildModellingTable(SimulationResult result)
+    {
+        ModellingRows.Clear();
+
+        int rowCount = Math.Min(25, Math.Max(8, result.TotalArrived > 0 ? result.TotalArrived : 15));
+        var rng = new Random(42);  // fixed seed for reproducibility
+
+        double lambda  = ArrivalRate;
+        double mu      = ServiceRate;
+        double meanIAT = lambda > 0 ? 1.0 / lambda * 60 : 5.0;  // inter-arrival in minutes
+        double meanSvc = mu    > 0 ? 1.0 / mu    * 60 : 4.0;   // service time in minutes
+
+        double currentTime = 0;   // cumulative arrival time
+        double serverFree  = 0;   // when the server next becomes free
+        double cumProb     = 0;   // running cumulative probability
+
+        double totalWait       = 0;
+        double totalTurnaround = 0;
+        double totalResponse   = 0;
+        double totalIAT        = 0;
+
+        for (int i = 1; i <= rowCount; i++)
+        {
+            // Poisson inter-arrival: -ln(U)/lambda
+            double u1         = rng.NextDouble();
+            double interArrival = i == 1 ? 0 : Math.Max(0, -Math.Log(u1) * meanIAT);
+            currentTime += interArrival;
+
+            // Exponential service: -ln(U)/mu
+            double u2      = rng.NextDouble();
+            double svcTime = Math.Max(0.1, -Math.Log(u2) * meanSvc);
+
+            // Schedule timing
+            double startTime = Math.Max(currentTime, serverFree);
+            double endTime   = startTime + svcTime;
+            serverFree = endTime;
+
+            double wait       = startTime - currentTime;
+            double turnaround = endTime   - currentTime;
+            double response   = svcTime;
+
+            // Cumulative probability (exponential CDF simplified)
+            double prevCumProb = cumProb;
+            cumProb = 1.0 - Math.Exp(-lambda * (i / (double)rowCount) * mu);
+            cumProb = Math.Min(cumProb, 0.9999);
+
+            totalWait        += wait;
+            totalTurnaround  += turnaround;
+            totalResponse    += response;
+            totalIAT         += interArrival;
+
+            ModellingRows.Add(new ModellingRowViewModel
+            {
+                SNo                  = i,
+                CumProb              = cumProb,
+                CumProbLookup        = prevCumProb,
+                MinsBetweenArrivals  = (int)Math.Round(interArrival),
+                RandomInterArrival   = Math.Round(u1, 4),
+                PoissonArrival       = (int)Math.Round(interArrival),
+                RandomService        = Math.Round(u2, 4),
+                ExpService           = Math.Round(svcTime, 2),
+                ArrivalTime          = Math.Round(currentTime, 2),
+                StartTime            = Math.Round(startTime, 2),
+                EndTime              = Math.Round(endTime, 2),
+                TurnaroundTime       = Math.Round(turnaround, 2),
+                WaitTime             = Math.Round(wait, 2),
+                ResponseTime         = Math.Round(response, 2),
+            });
+        }
+
+        if (rowCount > 0)
+        {
+            ModellingAvgWait        = Math.Round(totalWait        / rowCount, 3);
+            ModellingAvgTurnaround  = Math.Round(totalTurnaround  / rowCount, 3);
+            ModellingAvgResponse    = Math.Round(totalResponse    / rowCount, 3);
+            ModellingAvgInterArrival = Math.Round(totalIAT         / Math.Max(1, rowCount - 1), 3);
+        }
+    }
+
+    private void UpdateChartData()
+    {
+        ChartRhoValues.Clear();
+        ChartWqValues.Clear();
+        ChartThroughput.Clear();
+        ChartRunLabels.Clear();
+
+        // Show last 8 runs (newest last)
+        var runs = RunHistory.Reverse().Take(8).ToList();
+        double maxWq = runs.Count > 0 ? runs.Max(r => r.Wq) : 1.0;
+        double maxTp = runs.Count > 0 ? runs.Max(r => r.Throughput) : 1.0;
+        ChartMaxWq         = Math.Max(maxWq, 0.001);
+        ChartMaxThroughput = Math.Max(maxTp, 0.001);
+
+        foreach (var r in runs)
+        {
+            ChartRhoValues.Add(r.Rho);
+            ChartWqValues.Add(r.Wq);
+            ChartThroughput.Add(r.Throughput);
+            ChartRunLabels.Add($"#{r.RunNumber}");
+        }
     }
 
     private void EnsureToken(int passengerId)
