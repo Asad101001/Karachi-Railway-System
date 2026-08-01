@@ -14,9 +14,6 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
-        // Disable WPF Stylus support to fix touch input on maximized windows
-        DisableWPFTabletSupport();
-
         // Catch crashes that happen before the WPF dispatcher is up
         AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
         {
@@ -29,33 +26,6 @@ public partial class App : Application
         base.OnStartup(e);
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
-    }
-
-    private static void DisableWPFTabletSupport()
-    {
-        try
-        {
-            var devices = System.Windows.Input.Tablet.TabletDevices;
-            if (devices.Count > 0)
-            {
-                var inputManagerType = typeof(System.Windows.Input.InputManager);
-                var stylusLogic = inputManagerType.InvokeMember("StylusLogic",
-                    System.Reflection.BindingFlags.GetProperty | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-                    null, System.Windows.Input.InputManager.Current, null);
-
-                if (stylusLogic != null)
-                {
-                    var stylusLogicType = stylusLogic.GetType();
-                    while (devices.Count > 0)
-                    {
-                        stylusLogicType.InvokeMember("OnTabletRemoved",
-                            System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
-                            null, stylusLogic, new object[] { (uint)0 });
-                    }
-                }
-            }
-        }
-        catch { /* best effort */ }
     }
 
     private static void OnDispatcherUnhandledException(object sender,
