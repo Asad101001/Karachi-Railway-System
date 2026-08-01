@@ -43,21 +43,6 @@
                             <CubicEase EasingMode="EaseOut"/>
                         </DoubleAnimation.EasingFunction>
                     </DoubleAnimation>
-
-                    <DoubleAnimation Storyboard.TargetName="WelcomeOverlay"
-                                     Storyboard.TargetProperty="Opacity"
-                                     BeginTime="0:0:2.2"
-                                     From="1" To="0" Duration="0:0:0.8">
-                        <DoubleAnimation.EasingFunction>
-                            <CubicEase EasingMode="EaseOut"/>
-                        </DoubleAnimation.EasingFunction>
-                    </DoubleAnimation>
-
-                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="WelcomeOverlay"
-                                                   Storyboard.TargetProperty="Visibility"
-                                                   BeginTime="0:0:3">
-                        <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}"/>
-                    </ObjectAnimationUsingKeyFrames>
                 </Storyboard>
             </BeginStoryboard>
         </EventTrigger>
@@ -2074,48 +2059,6 @@
         </StackPanel>
     </Border>
 </Grid>
-
-<!-- ══ WELCOME SPLASH ════════════════════════════════════════════ -->
-<Grid x:Name="WelcomeOverlay" Grid.RowSpan="3" Panel.ZIndex="999"
-      Background="#EEFFFFFF" Opacity="1">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="1" Width="200" Height="200" CornerRadius="16"
-                        Background="White" Padding="14"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Image Source="/Assets/karachi-logo.png"
-                           Stretch="Uniform"
-                           SnapsToDevicePixels="True"/>
-                </Border>
-
-                <!-- Gold accent line -->
-                <Border Grid.Row="1" Width="240" Height="4" VerticalAlignment="Bottom"
-                        Background="{StaticResource GoldAccentGradient}"
-                        CornerRadius="2" HorizontalAlignment="Center" Margin="0,-2,0,0"/>
-
-                <TextBlock Grid.Row="2"
-                           Text="Welcome to the Karachi Railway System"
-                           Style="{StaticResource HeadingLarge}"
-                           FontSize="30"
-                           HorizontalAlignment="Center"
-                           Margin="0,22,0,0"/>
-
-                <TextBlock Grid.Row="3"
-                           Text="Made by UBIT Department"
-                           Style="{StaticResource BodyText}"
-                           FontSize="18"
-                           Foreground="{StaticResource AccentGoldBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,10,0,0"/>
-            </Grid>
-        </Grid>
 
         <!-- ══ MODEL SELECTION SCREEN ════════════════════════════════════ -->
         <Grid Grid.RowSpan="3" Panel.ZIndex="998"
