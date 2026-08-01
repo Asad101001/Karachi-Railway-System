@@ -12,6 +12,12 @@ public enum AppTab { Home, Model, Metrics, Reports, Settings, About }
 
 public enum SimulationState { Idle, Running, Paused, Completed }
 
+public class ChartDataPoint
+{
+    public double Value { get; set; }
+    public double NormalizedHeight { get; set; }
+}
+
 /// <summary>
 /// Main view model for the Karachi Railway Simulation desktop application.
 /// </summary>
@@ -21,12 +27,17 @@ public sealed class MainViewModel : ViewModelBase
     private CancellationTokenSource? _cts;
     private SimulationState          _state = SimulationState.Idle;
     private SimulationResult?        _result;
+    private Passenger?               _selectedPassenger;
+    private bool                     _isCustomerModalOpen;
 
     private readonly PlaybackController _playback = new();
     private readonly Dictionary<int, string>                   _passengerCurrentNodes = new();
     private readonly Dictionary<int, PassengerTokenViewModel>  _tokenMap              = new();
     private readonly Dictionary<string, FlowNodeViewModel>     _nodeMap               = new();
     private const int MaxVisibleTokens = 15;
+
+    public ObservableCollection<Passenger> ActivePassengers { get; } = new();
+    public ObservableCollection<ChartDataPoint> ChartData { get; } = new();
 
     public MainViewModel()
     {
@@ -49,12 +60,20 @@ public sealed class MainViewModel : ViewModelBase
           StepCommand   = new RelayCommand(StepForwardPlayback,
                         () => State is SimulationState.Running or SimulationState.Paused &&
                             _playback.EventsDone < _playback.EventsTotal);
-        StopCommand   = new RelayCommand(StopSimulation, () => State is SimulationState.Running or SimulationState.Paused);
-        ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Running);
+        StopCommand   = new RelayCommand(StopSimulation, () => State != SimulationState.Idle);
+        ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Idle);
+
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
-        SelectModelCommand      = new RelayCommand(SelectModel);
-        NavigateCommand         = new RelayCommand(NavigateTo);
+        SelectModelCommand      = new RelayCommand(m => SelectedQueueModel = (QueueModelType)m!);
+        NavigateCommand         = new RelayCommand(p => NavigateTo((string)p!));
+        
+        ViewCustomerCommand = new RelayCommand(p => 
+        {
+            SelectedPassenger = (Passenger)p!;
+            IsCustomerModalOpen = true;
+        });
+        CloseCustomerModalCommand = new RelayCommand(() => IsCustomerModalOpen = false);
 
         _playback.EventApplied      += OnEventApplied;
         _playback.PlaybackCompleted += OnPlaybackCompleted;
@@ -253,8 +272,11 @@ public sealed class MainViewModel : ViewModelBase
     private int _runCounter = 0;
     public ObservableCollection<SimulationRunSummary> RunHistory { get; } = new();
 
-    // ── Modelling Table (Model tab) ───────────────────────────────────────────
+    // ── Table Modeling ───────────────────────────────────────────────────────
     public ObservableCollection<ModellingRowViewModel> ModellingRows { get; } = new();
+    
+    // ── Passenger History ────────────────────────────────────────────────────
+    public ObservableCollection<Passenger> CompletedPassengers { get; } = new();
 
     private double _modellingAvgWait;
     public double ModellingAvgWait { get => _modellingAvgWait; private set => SetProperty(ref _modellingAvgWait, value); }
@@ -265,11 +287,23 @@ public sealed class MainViewModel : ViewModelBase
     private double _modellingAvgInterArrival;
     public double ModellingAvgInterArrival { get => _modellingAvgInterArrival; private set => SetProperty(ref _modellingAvgInterArrival, value); }
 
+    public Passenger? SelectedPassenger
+    {
+        get => _selectedPassenger;
+        set => SetProperty(ref _selectedPassenger, value);
+    }
+
+    public bool IsCustomerModalOpen
+    {
+        get => _isCustomerModalOpen;
+        set => SetProperty(ref _isCustomerModalOpen, value);
+    }
+
     // ── Metrics chart data (Metrics tab) ─────────────────────────────────────
     // Normalised bar heights (0..1) for utilization across runs
-    public ObservableCollection<double> ChartRhoValues     { get; } = new();
-    public ObservableCollection<double> ChartWqValues      { get; } = new();
-    public ObservableCollection<double> ChartThroughput    { get; } = new();
+    public ObservableCollection<ChartDataPoint> ChartRhoValues     { get; } = new();
+    public ObservableCollection<ChartDataPoint> ChartWqValues      { get; } = new();
+    public ObservableCollection<ChartDataPoint> ChartThroughput    { get; } = new();
     public ObservableCollection<string> ChartRunLabels     { get; } = new();
     // Max values for scaling
     private double _chartMaxWq = 1.0;
@@ -487,6 +521,8 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand ToggleRightPanelCommand { get; }
     public ICommand SelectModelCommand      { get; }
     public ICommand NavigateCommand         { get; }
+    public ICommand ViewCustomerCommand     { get; }
+    public ICommand CloseCustomerModalCommand { get; }
 
     private async Task StartSimulationAsync()
     {
@@ -671,6 +707,13 @@ public sealed class MainViewModel : ViewModelBase
             PlainSummary = BuildPlainSummary(_result);
             SaveRunToHistory(_result);
             BuildModellingTable(_result);
+            
+            CompletedPassengers.Clear();
+            foreach (var p in _result.Passengers)
+            {
+                CompletedPassengers.Add(p);
+            }
+
             UpdateChartData();
         }
 
@@ -809,9 +852,9 @@ public sealed class MainViewModel : ViewModelBase
 
         foreach (var r in runs)
         {
-            ChartRhoValues.Add(r.Rho);
-            ChartWqValues.Add(r.Wq);
-            ChartThroughput.Add(r.Throughput);
+            ChartRhoValues.Add(new ChartDataPoint { Value = r.Rho, NormalizedHeight = r.Rho * 140 });
+            ChartWqValues.Add(new ChartDataPoint { Value = r.Wq, NormalizedHeight = (r.Wq / ChartMaxWq) * 140 });
+            ChartThroughput.Add(new ChartDataPoint { Value = r.Throughput, NormalizedHeight = (r.Throughput / ChartMaxThroughput) * 140 });
             ChartRunLabels.Add($"#{r.RunNumber}");
         }
     }

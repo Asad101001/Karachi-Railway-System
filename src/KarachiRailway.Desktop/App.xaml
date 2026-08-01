@@ -16,41 +16,41 @@
         <conv:UtilizationToBrushConverter       x:Key="UtilToBrush"/>
         <conv:MultiplyConverter                 x:Key="Multiply"/>
 
-        <!-- ══ GREEN + GOLD COLOR PALETTE ═══════════════════════════════════ -->
-        <!-- Background layers — deep forest green -->
-        <Color x:Key="BackgroundDeep">#060F06</Color>
-        <Color x:Key="BackgroundCard">#0B1A0C</Color>
-        <Color x:Key="BackgroundPanel">#091508</Color>
-        <Color x:Key="BackgroundElevated">#102014</Color>
-        <Color x:Key="BackgroundSidebar">#071209</Color>
+        <!-- ══ GREEN + GOLD COLOR PALETTE (LIGHT THEME) ══════════════════════ -->
+        <!-- Background layers — crisp white and light grays -->
+        <Color x:Key="BackgroundDeep">#F3F4F6</Color>      <!-- Gray 100 -->
+        <Color x:Key="BackgroundCard">#FFFFFF</Color>      <!-- White -->
+        <Color x:Key="BackgroundPanel">#F9FAFB</Color>     <!-- Gray 50 -->
+        <Color x:Key="BackgroundElevated">#FFFFFF</Color>  <!-- White -->
+        <Color x:Key="BackgroundSidebar">#0F172A</Color>   <!-- Slate 900 (Dark sidebar contrast) -->
 
         <!-- Primary green accents -->
-        <Color x:Key="AccentGreen">#22C55E</Color>
-        <Color x:Key="AccentGreenBright">#4ADE80</Color>
-        <Color x:Key="AccentGreenDim">#15803D</Color>
-        <Color x:Key="AccentGreenSoft">#166534</Color>
+        <Color x:Key="AccentGreen">#16A34A</Color>         <!-- Green 600 -->
+        <Color x:Key="AccentGreenBright">#22C55E</Color>   <!-- Green 500 -->
+        <Color x:Key="AccentGreenDim">#15803D</Color>      <!-- Green 700 -->
+        <Color x:Key="AccentGreenSoft">#DCFCE7</Color>     <!-- Green 100 (for backgrounds) -->
 
         <!-- Gold / yellow accents -->
-        <Color x:Key="AccentGold">#EAB308</Color>
-        <Color x:Key="AccentGoldBright">#FDE047</Color>
-        <Color x:Key="AccentGoldDim">#A16207</Color>
-        <Color x:Key="AccentAmber">#F59E0B</Color>
+        <Color x:Key="AccentGold">#D97706</Color>          <!-- Amber 600 -->
+        <Color x:Key="AccentGoldBright">#F59E0B</Color>    <!-- Amber 500 -->
+        <Color x:Key="AccentGoldDim">#B45309</Color>       <!-- Amber 700 -->
+        <Color x:Key="AccentAmber">#D97706</Color>
 
         <!-- Supporting colours -->
-        <Color x:Key="AccentRed">#EF4444</Color>
-        <Color x:Key="AccentRedBright">#F87171</Color>
-        <Color x:Key="AccentBlue">#3B82F6</Color>
-        <Color x:Key="AccentBlueBright">#60A5FA</Color>
+        <Color x:Key="AccentRed">#DC2626</Color>           <!-- Red 600 -->
+        <Color x:Key="AccentRedBright">#EF4444</Color>     <!-- Red 500 -->
+        <Color x:Key="AccentBlue">#2563EB</Color>          <!-- Blue 600 -->
+        <Color x:Key="AccentBlueBright">#3B82F6</Color>    <!-- Blue 500 -->
 
         <!-- Text -->
-        <Color x:Key="TextPrimary">#F0FFF4</Color>
-        <Color x:Key="TextSecondary">#86EFAC</Color>
-        <Color x:Key="TextMuted">#4B7A5C</Color>
+        <Color x:Key="TextPrimary">#111827</Color>         <!-- Gray 900 -->
+        <Color x:Key="TextSecondary">#4B5563</Color>       <!-- Gray 600 -->
+        <Color x:Key="TextMuted">#9CA3AF</Color>           <!-- Gray 400 -->
 
         <!-- Borders -->
-        <Color x:Key="Border">#1A4A20</Color>
-        <Color x:Key="BorderHover">#22C55E</Color>
-        <Color x:Key="BorderGold">#A16207</Color>
+        <Color x:Key="Border">#E5E7EB</Color>              <!-- Gray 200 -->
+        <Color x:Key="BorderHover">#16A34A</Color>         <!-- Green 600 -->
+        <Color x:Key="BorderGold">#F59E0B</Color>
 
         <!-- ── Solid Brushes ──────────────────────────────────────────────── -->
         <SolidColorBrush x:Key="BackgroundDeepBrush"     Color="{StaticResource BackgroundDeep}"/>
@@ -76,30 +76,30 @@
 
         <!-- Gradient brushes -->
         <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#0B1A0C" Offset="0.0"/>
-            <GradientStop Color="#091508" Offset="0.5"/>
-            <GradientStop Color="#0B1A0C" Offset="1.0"/>
+            <GradientStop Color="#FFFFFF" Offset="0.0"/>
+            <GradientStop Color="#F9FAFB" Offset="0.5"/>
+            <GradientStop Color="#FFFFFF" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="SidebarGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#071209" Offset="0.0"/>
-            <GradientStop Color="#060F06" Offset="1.0"/>
+            <GradientStop Color="#0F172A" Offset="0.0"/>
+            <GradientStop Color="#1E293B" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="CardGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#0D1F0F" Offset="0.0"/>
-            <GradientStop Color="#060F06" Offset="1.0"/>
+            <GradientStop Color="#FFFFFF" Offset="0.0"/>
+            <GradientStop Color="#F9FAFB" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="GoldAccentGradient" StartPoint="0,0" EndPoint="1,0">
-            <GradientStop Color="#EAB308" Offset="0.0"/>
-            <GradientStop Color="#FDE047" Offset="0.5"/>
-            <GradientStop Color="#EAB308" Offset="1.0"/>
+            <GradientStop Color="#D97706" Offset="0.0"/>
+            <GradientStop Color="#F59E0B" Offset="0.5"/>
+            <GradientStop Color="#D97706" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="GreenButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#22C55E" Offset="0.0"/>
-            <GradientStop Color="#15803D" Offset="1.0"/>
+            <GradientStop Color="#16A34A" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="GoldButtonGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#EAB308" Offset="0.0"/>
-            <GradientStop Color="#A16207" Offset="1.0"/>
+            <GradientStop Color="#F59E0B" Offset="0.0"/>
+            <GradientStop Color="#D97706" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="AmberButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#F59E0B" Offset="0.0"/>
@@ -107,7 +107,7 @@
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="RedButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#EF4444" Offset="0.0"/>
-            <GradientStop Color="#B91C1C" Offset="1.0"/>
+            <GradientStop Color="#DC2626" Offset="1.0"/>
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="AccentButtonGradient" StartPoint="0,0" EndPoint="0,1">
             <GradientStop Color="#22C55E" Offset="0.0"/>
@@ -126,22 +126,24 @@
         <SineEase   x:Key="SineInOut" EasingMode="EaseInOut"/>
 
         <!-- ══ TYPOGRAPHY ════════════════════════════════════════════════════ -->
+        <FontFamily x:Key="OutfitFont">pack://application:,,,/KarachiRailway.Desktop;component/Assets/Fonts/#Outfit</FontFamily>
+
         <Style x:Key="HeadingLarge" TargetType="TextBlock">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="22"/>
-            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="FontFamily"  Value="{StaticResource OutfitFont}"/>
+            <Setter Property="FontSize"    Value="26"/>
+            <Setter Property="FontWeight"  Value="Bold"/>
             <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
         <Style x:Key="HeadingMedium" TargetType="TextBlock">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="15"/>
+            <Setter Property="FontFamily"  Value="{StaticResource OutfitFont}"/>
+            <Setter Property="FontSize"    Value="18"/>
             <Setter Property="FontWeight"  Value="SemiBold"/>
             <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
         <Style x:Key="HeadingSmall" TargetType="TextBlock">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
+            <Setter Property="FontFamily"  Value="{StaticResource OutfitFont}"/>
             <Setter Property="FontSize"          Value="11"/>
             <Setter Property="FontWeight"        Value="SemiBold"/>
             <Setter Property="Foreground"        Value="{StaticResource AccentGoldBrush}"/>
@@ -153,10 +155,15 @@
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
         <Style x:Key="KpiValue" TargetType="TextBlock">
-            <Setter Property="FontFamily"  Value="Segoe UI"/>
-            <Setter Property="FontSize"    Value="28"/>
-            <Setter Property="FontWeight"  Value="Bold"/>
+            <Setter Property="FontFamily"  Value="{StaticResource OutfitFont}"/>
+            <Setter Property="FontSize"    Value="34"/>
+            <Setter Property="FontWeight"  Value="Black"/>
             <Setter Property="Foreground"  Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#000000" ShadowDepth="2" BlurRadius="4" Opacity="0.1"/>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="KpiLabel" TargetType="TextBlock">
             <Setter Property="FontFamily"  Value="Segoe UI"/>
@@ -259,13 +266,13 @@
                                            Text="{TemplateBinding Content}"
                                            FontSize="22"
                                            HorizontalAlignment="Center"
-                                           Foreground="#4B7A5C"/>
+                                           Foreground="#9CA3AF"/>
                                 <TextBlock x:Name="Label"
                                            Text="{TemplateBinding Tag}"
                                            FontFamily="Segoe UI"
                                            FontSize="9"
                                            HorizontalAlignment="Center"
-                                           Foreground="#4B7A5C"
+                                           Foreground="#9CA3AF"
                                            Margin="0,3,0,0"/>
                             </StackPanel>
                         </Border>
@@ -273,8 +280,8 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd"     Property="Background" Value="#22C55E18"/>
                                 <Setter TargetName="Bd"     Property="BorderBrush" Value="#22C55E55"/>
-                                <Setter TargetName="Icon"   Property="Foreground" Value="#86EFAC"/>
-                                <Setter TargetName="Label"  Property="Foreground" Value="#86EFAC"/>
+                                <Setter TargetName="Icon"   Property="Foreground" Value="#F8FAFC"/>
+                                <Setter TargetName="Label"  Property="Foreground" Value="#F8FAFC"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4"/>
@@ -517,12 +524,13 @@
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ComboBoxItem">
-                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        <Setter Property="Foreground" Value="#9CA3AF"/>
                         <Setter Property="Background" Value="{StaticResource BackgroundPanelBrush}"/>
                         <Setter Property="Padding" Value="8,4"/>
                         <Style.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
                                 <Setter Property="Background" Value="{StaticResource BackgroundElevatedBrush}"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="{StaticResource AccentGreenDimBrush}"/>
@@ -598,13 +606,48 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
-        <!-- ══ KPI CARD ═══════════════════════════════════════════════════════ -->
         <Style x:Key="KpiCard" TargetType="Border">
             <Setter Property="CornerRadius"    Value="10"/>
             <Setter Property="Padding"         Value="14,12"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Background"      Value="{StaticResource BackgroundElevatedBrush}"/>
             <Setter Property="BorderBrush"     Value="{StaticResource BorderBrush}"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                             To="1.03" Duration="0:0:0.15">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                             To="1.03" Duration="0:0:0.15">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                             To="1" Duration="0:0:0.2">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                             To="1" Duration="0:0:0.2">
+                                <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut"/></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
         </Style>
 
     </Application.Resources>

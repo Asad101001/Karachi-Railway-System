@@ -7,7 +7,7 @@ The application supports three single-server queue models (M/M/1, M/G/1, G/G/1) 
 
 ## What’s New (Recent Updates)
 
-- **Complete UI/UX Overhaul**: Adopted a premium Forest Green and Gold color palette, replacing the former blue theme, providing a more modern and striking aesthetic.
+- **Complete UI/UX Overhaul**: Adopted a premium, sleek Light Green and White color palette with Gold/Yellow accents. The typography has been refreshed using the **Outfit** font for distinctive headings and KPI cards, along with smooth micro-animations on interactive elements for a highly polished experience.
 - **Sidebar Navigation**: Replaced the previous 3-column layout with a sleek icon-based sidebar, featuring six main tabs:
   - **🏠 Home**: Real-time Animated Flow Diagram and quick KPI tracking.
   - **🧮 Model**: A detailed column-wise **M/M/1 Simulation Table** allowing users to inspect probabilities, inter-arrival times, service times, and wait times row by row.

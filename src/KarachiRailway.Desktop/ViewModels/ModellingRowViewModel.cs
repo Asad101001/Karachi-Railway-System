@@ -42,5 +42,5 @@ public sealed class ModellingRowViewModel : INotifyPropertyChanged
     public double ResponseTime   { get; init; }  // End - Start (= service time)
 
     // ── Computed background colors for zebra striping ─────────────────────────
-    public string RowBackground => SNo % 2 == 0 ? "#0D2010" : "#0A1A0D";
+    public string RowBackground => SNo % 2 == 0 ? "#F8FAF8" : "#FFFFFF";
 }
