@@ -11,6 +11,7 @@
         MinHeight="700" MinWidth="1100"
         Background="{StaticResource BackgroundDeepBrush}"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display">
 

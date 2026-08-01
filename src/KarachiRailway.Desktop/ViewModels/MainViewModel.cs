@@ -65,7 +65,7 @@ public sealed class MainViewModel : ViewModelBase
 
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
-        SelectModelCommand      = new RelayCommand(m => SelectedQueueModel = (QueueModelType)m!);
+        SelectModelCommand      = new RelayCommand(m => SelectedQueueModel = (QueueModelType)Enum.Parse(typeof(QueueModelType), m!.ToString()!));
         NavigateCommand         = new RelayCommand(p => NavigateTo((string)p!));
         
         ViewCustomerCommand = new RelayCommand(p => 
