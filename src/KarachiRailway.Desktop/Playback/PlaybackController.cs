@@ -8,7 +8,7 @@ namespace KarachiRailway.Desktop.Playback;
 /// On every timer tick the playback clock advances by elapsed real time scaled by SpeedMultiplier
 /// (at 1x, 1 simulated minute advances per 1 real second), and all due events are fired.
 /// </summary>
-public sealed class PlaybackController
+public sealed class PlaybackController : IDisposable
 {
     private const int TickMs = 100;
 
@@ -34,6 +34,7 @@ public sealed class PlaybackController
     public double PlaybackTime => _playbackTime;
     public int    EventsTotal  => _events.Count;
     public int    EventsDone   => _nextIndex;
+    public int    CurrentEventNumber => Math.Min(_nextIndex + 1, _events.Count);
 
     public double SpeedMultiplier
     {
@@ -107,6 +108,15 @@ public sealed class PlaybackController
         return true;
     }
 
+    public void Dispose()
+    {
+        _timer.Stop();
+        _timer.Tick -= OnTick;
+        _events = Array.Empty<PlaybackEvent>();
+        EventApplied = null;
+        PlaybackCompleted = null;
+    }
+
     // ── Timer tick ───────────────────────────────────────────────────────────
 
     private void OnTick(object? sender, EventArgs e)
@@ -117,7 +127,8 @@ public sealed class PlaybackController
 
         if (elapsedSeconds <= 0) return;
 
-        _playbackTime += elapsedSeconds * _speedMultiplier;
+        // Advance simulated time in minutes (at 1x speed, 1 real second = 0.6 simulated minutes)
+        _playbackTime += elapsedSeconds * _speedMultiplier * 0.6;
 
         while (_nextIndex < _events.Count &&
                _events[_nextIndex].SimTime <= _playbackTime)

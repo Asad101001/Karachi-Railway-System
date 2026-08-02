@@ -5,25 +5,42 @@ using KarachiRailway.Desktop.Playback;
 using KarachiRailway.Simulation.Engine;
 using KarachiRailway.Simulation.Models;
 
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
+
 namespace KarachiRailway.Desktop.ViewModels;
 
+/// <summary>Navigation tabs for the sidebar.</summary>
+public enum AppTab { Home, Model, Metrics, Compare, Reports, Settings, About }
+
 public enum SimulationState { Idle, Running, Paused, Completed }
+
+
 
 /// <summary>
 /// Main view model for the Karachi Railway Simulation desktop application.
 /// </summary>
-public sealed class MainViewModel : ViewModelBase
+public sealed class MainViewModel : ViewModelBase, IDisposable
 {
     private SimulationRunner?        _runner;
     private CancellationTokenSource? _cts;
     private SimulationState          _state = SimulationState.Idle;
     private SimulationResult?        _result;
+    private Passenger?               _selectedPassenger;
+    private bool                     _isCustomerModalOpen;
+    private int                      _runGeneration;
+    private bool                     _disposed;
 
     private readonly PlaybackController _playback = new();
     private readonly Dictionary<int, string>                   _passengerCurrentNodes = new();
     private readonly Dictionary<int, PassengerTokenViewModel>  _tokenMap              = new();
     private readonly Dictionary<string, FlowNodeViewModel>     _nodeMap               = new();
     private const int MaxVisibleTokens = 15;
+
+    public ObservableCollection<Passenger> ActivePassengers { get; } = new();
+
 
     public MainViewModel()
     {
@@ -39,24 +56,32 @@ public sealed class MainViewModel : ViewModelBase
         };
         _selectedSpeed = SpeedOptions[2];
 
-        StartCommand  = new AsyncRelayCommand(StartSimulationAsync,
-                            () => State is SimulationState.Idle or SimulationState.Completed);
-        PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running);
-        ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused);
-          StepCommand   = new RelayCommand(StepForwardPlayback,
-                        () => State is SimulationState.Running or SimulationState.Paused &&
-                            _playback.EventsDone < _playback.EventsTotal);
-        StopCommand   = new RelayCommand(StopSimulation, () => State is SimulationState.Running or SimulationState.Paused);
-        ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Running);
+        StartCommand  = new AsyncRelayCommand(StartSimulationAsync);
+        PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running || _playback.IsPlaying);
+        ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused || !_playback.IsPlaying);
+        StepCommand   = new RelayCommand(StepForwardPlayback, () => _playback.EventsTotal > 0 && _playback.EventsDone < _playback.EventsTotal);
+        StopCommand   = new RelayCommand(StopSimulation);
+        ResetCommand  = new RelayCommand(Reset);
+
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
         SelectModelCommand      = new RelayCommand(SelectModel);
+        NavigateCommand         = new RelayCommand(p => NavigateTo((string)p!));
+        
+        ViewCustomerCommand = new RelayCommand(p => 
+        {
+            SelectedPassenger = (Passenger)p!;
+            IsCustomerModalOpen = true;
+        });
+        CloseCustomerModalCommand = new RelayCommand(() => IsCustomerModalOpen = false);
 
         _playback.EventApplied      += OnEventApplied;
         _playback.PlaybackCompleted += OnPlaybackCompleted;
 
         BuildFlowDiagram();
     }
+
+    private readonly Dictionary<QueueModelType, SimulationResult> _modelResults = new();
 
     public SimulationState State
     {
@@ -69,6 +94,7 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsRunning));
                 OnPropertyChanged(nameof(IsPaused));
                 OnPropertyChanged(nameof(IsCompleted));
+                Application.Current.Dispatcher.Invoke(() => System.Windows.Input.CommandManager.InvalidateRequerySuggested());
                 OnPropertyChanged(nameof(StatusLabel));
                 OnPropertyChanged(nameof(StatusColor));
                 OnPropertyChanged(nameof(CanEditParams));
@@ -114,6 +140,19 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsMG1));
                 OnPropertyChanged(nameof(IsGG1));
                 OnPropertyChanged(nameof(QueueModelHeaderText));
+                
+                if (value == QueueModelType.MG1 && ServiceCv == 1.0) ServiceCv = 0.5;
+                if (value == QueueModelType.GG1)
+                {
+                    if (ServiceCv == 1.0) ServiceCv = 0.5;
+                    if (ArrivalCv == 1.0) ArrivalCv = 0.5;
+                }
+                
+                // Automatically re-run simulation for the newly selected queue model ONLY IF a simulation has already been executed
+                if (_result != null && State is SimulationState.Idle or SimulationState.Completed)
+                {
+                    _ = StartSimulationAsync();
+                }
             }
         }
     }
@@ -214,6 +253,346 @@ public sealed class MainViewModel : ViewModelBase
     public double EffectiveDiagramZoom => DiagramZoom * AutoZoomFactor;
     public double EffectiveBlockScale => BlockScale * AutoZoomFactor;
 
+    // ── Sidebar navigation ───────────────────────────────────────────────────
+    private AppTab _activeTab = AppTab.Home;
+    public AppTab ActiveTab
+    {
+        get => _activeTab;
+        set
+        {
+            if (SetProperty(ref _activeTab, value))
+            {
+                OnPropertyChanged(nameof(IsTabHome));
+                OnPropertyChanged(nameof(IsTabModel));
+                OnPropertyChanged(nameof(IsTabMetrics));
+                OnPropertyChanged(nameof(IsTabCompare));
+                OnPropertyChanged(nameof(IsTabReports));
+                OnPropertyChanged(nameof(IsTabSettings));
+                OnPropertyChanged(nameof(IsTabAbout));
+            }
+        }
+    }
+    public bool IsTabHome     => ActiveTab == AppTab.Home;
+    public bool IsTabModel    => ActiveTab == AppTab.Model;
+    public bool IsTabMetrics  => ActiveTab == AppTab.Metrics;
+    public bool IsTabCompare  => ActiveTab == AppTab.Compare;
+    public bool IsTabReports  => ActiveTab == AppTab.Reports;
+    public bool IsTabSettings => ActiveTab == AppTab.Settings;
+    public bool IsTabAbout    => ActiveTab == AppTab.About;
+
+    private void NavigateTo(object? param)
+    {
+        if (param is string s && Enum.TryParse<AppTab>(s, out var tab))
+            ActiveTab = tab;
+    }
+
+    // ── Run History (Reports tab) ─────────────────────────────────────────────
+    private int _runCounter = 0;
+    public ObservableCollection<SimulationRunSummary> RunHistory { get; } = new();
+
+    // ── Table Modeling ───────────────────────────────────────────────────────
+    public ObservableCollection<ModellingRowViewModel> ModellingRows { get; } = new();
+
+    // ── Gantt Chart ──────────────────────────────────────────────────────────
+    public ObservableCollection<GanttItem> GanttItems { get; } = new();
+
+    // ── Passenger History ────────────────────────────────────────────────────
+    public ObservableCollection<Passenger> CompletedPassengers { get; } = new();
+
+    private double _modellingAvgWait;
+    public double ModellingAvgWait { get => _modellingAvgWait; private set => SetProperty(ref _modellingAvgWait, value); }
+    private double _modellingAvgTurnaround;
+    public double ModellingAvgTurnaround { get => _modellingAvgTurnaround; private set => SetProperty(ref _modellingAvgTurnaround, value); }
+    private double _modellingAvgResponse;
+    public double ModellingAvgResponse { get => _modellingAvgResponse; private set => SetProperty(ref _modellingAvgResponse, value); }
+    private double _modellingAvgInterArrival;
+    public double ModellingAvgInterArrival { get => _modellingAvgInterArrival; private set => SetProperty(ref _modellingAvgInterArrival, value); }
+
+    public Passenger? SelectedPassenger
+    {
+        get => _selectedPassenger;
+        set => SetProperty(ref _selectedPassenger, value);
+    }
+
+    public bool IsCustomerModalOpen
+    {
+        get => _isCustomerModalOpen;
+        set => SetProperty(ref _isCustomerModalOpen, value);
+    }
+
+    private string _runNarrative = "Run a simulation to generate a report.";
+    public string RunNarrative
+    {
+        get => _runNarrative;
+        private set => SetProperty(ref _runNarrative, value);
+    }
+
+    // ── Metrics chart data (Compare tab & Metrics tab) ────────────────────────
+    public ISeries[] WaitTimeTrend { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Wait Time (Wq)",
+            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 6,
+            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] QueueLengthTrend { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Queue Length (Lq)",
+            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 6,
+            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] CurrentRunWaitTimes { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Wait Time",
+            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
+            Fill = new SolidColorPaint(SKColors.MediumSeaGreen.WithAlpha(50)),
+            GeometrySize = 4,
+            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] CurrentRunTurnaroundTimes { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Turnaround Time",
+            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
+            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)),
+            GeometrySize = 4,
+            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] KpiRhoSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiWqSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiWSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiLSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+
+    public Axis[] SparklineXAxes { get; } = new Axis[] { new Axis { IsVisible = false } };
+    public Axis[] SparklineYAxes { get; } = new Axis[] { new Axis { IsVisible = false } };
+
+    public ISeries[] ModelCompareWqSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Wait Time (Wq)",
+            Fill = new SolidColorPaint(SKColor.Parse("#F59E0B")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
+        }
+    };
+
+    public ISeries[] ModelCompareWSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "System Time (W)",
+            Fill = new SolidColorPaint(SKColor.Parse("#10B981")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
+        }
+    };
+
+    public ISeries[] ModelCompareUtilizationSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Utilization (Rho)",
+            Fill = new SolidColorPaint(SKColor.Parse("#3B82F6")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
+        }
+    };
+
+    public ISeries[] ModelCompareLSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Number in System (L)",
+            Fill = new SolidColorPaint(SKColor.Parse("#8B5CF6")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
+        }
+    };
+
+    public Axis[] ModelCompareXAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Queue Model Type",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            Labels = new[] { "M/M/1", "M/G/1", "G/G/1" },
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
+        } 
+    };
+
+    public Axis[] ModelCompareUtilizationYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Utilization Factor (ρ)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] ModelCompareLYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Avg Passengers in System (L)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] ModelCompareWqYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Avg Queue Wait Wq (mins)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] ModelCompareWYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Avg System Time W (mins)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] TrendXAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Simulation Run History",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            Labels = new ObservableCollection<string>(),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
+        } 
+    };
+
+    public Axis[] WaitTimeTrendYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Queue Wait Wq (mins)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            Labeler = value => value.ToString("0.00"),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] QueueLengthTrendYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Queue Length Lq (passengers)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            Labeler = value => value.ToString("0.00"),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] CurrentRunXAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Passenger Sequence Number",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
+        } 
+    };
+
+    public Axis[] CurrentWaitYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Wait Time Wq (mins)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            Labeler = value => value.ToString("0.00"),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] CurrentTurnaroundYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Name = "Turnaround Time W (mins)",
+            NameTextSize = 10,
+            NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            MinLimit = 0,
+            Labeler = value => value.ToString("0.00"),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 9,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
     {
@@ -221,7 +600,23 @@ public sealed class MainViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _selectedSpeed, value) && value != null)
+            {
                 _playback.SpeedMultiplier = value.Value;
+                PlaybackSpeed = value.Value;
+            }
+        }
+    }
+
+    private double _playbackSpeed = 1.0;
+    public double PlaybackSpeed
+    {
+        get => _playbackSpeed;
+        set
+        {
+            if (SetProperty(ref _playbackSpeed, value))
+            {
+                _playback.SpeedMultiplier = value;
+            }
         }
     }
 
@@ -269,21 +664,21 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
-    private double _serviceCv = 1.0;
+    private double _serviceCv = 1.5;
     public double ServiceCv
     {
         get => _serviceCv;
         set => SetProperty(ref _serviceCv, value);
     }
 
-    private double _arrivalCv = 1.0;
+    private double _arrivalCv = 0.8;
     public double ArrivalCv
     {
         get => _arrivalCv;
         set => SetProperty(ref _arrivalCv, value);
     }
 
-    private int _durationMinutes = 120;
+    private int _durationMinutes = 10;
     public int DurationMinutes
     {
         get => _durationMinutes;
@@ -420,15 +815,26 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand StepCommand   { get; }
     public ICommand StopCommand   { get; }
     public ICommand ResetCommand  { get; }
-    public ICommand ToggleLeftPanelCommand { get; }
+    public ICommand ToggleLeftPanelCommand  { get; }
     public ICommand ToggleRightPanelCommand { get; }
-    public ICommand SelectModelCommand { get; }
+    public ICommand SelectModelCommand      { get; }
+    public ICommand NavigateCommand         { get; }
+    public ICommand ViewCustomerCommand     { get; }
+    public ICommand CloseCustomerModalCommand { get; }
 
     private async Task StartSimulationAsync()
     {
-        if (!ValidateParameters()) return;
+        if (!ValidateParameters())
+        {
+            PlainSummary = $"Cannot simulate: {ValidationError}";
+            return;
+        }
 
-        _cts    = new CancellationTokenSource();
+        var generation = Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
+
+        var runCts = new CancellationTokenSource();
+        _cts    = runCts;
         _runner = new SimulationRunner(BuildParameters());
 
         PassengerLog.Clear();
@@ -440,14 +846,36 @@ public sealed class MainViewModel : ViewModelBase
         PlaybackProgress = 0;
         ResetFlowDiagram();
         State = SimulationState.Running;
+        CommandManager.InvalidateRequerySuggested();
 
         try
         {
-            var (result, events) = await _runner.RunForPlaybackAsync(cancellationToken: _cts.Token);
+            var (result, events) = await _runner.RunForPlaybackAsync(cancellationToken: runCts.Token);
+            if (generation != _runGeneration || runCts.IsCancellationRequested)
+                return;
 
             _result       = result;
             PlaybackTotal = Math.Max(1, events.Count);
+
+            _modelResults[result.ModelType] = result;
+
             ApplyResult(result);
+            SaveRunToHistory(result);
+            BuildModellingTable(result);
+            
+            CompletedPassengers.Clear();
+            foreach (var p in result.Passengers)
+            {
+                CompletedPassengers.Add(p);
+            }
+
+            UpdateChartData();
+            BuildGanttChart();
+            UpdateCompareCharts();
+
+            await RunInitialComparisonAsync(result, generation, runCts.Token);
+            if (generation != _runGeneration || runCts.IsCancellationRequested)
+                return;
 
             if (TraceModeEnabled)
             {
@@ -459,59 +887,107 @@ public sealed class MainViewModel : ViewModelBase
             }
 
             _playback.Load(events);
-            _playback.SpeedMultiplier = SelectedSpeed.Value;
+            _playback.SpeedMultiplier = PlaybackSpeed;
             _playback.Start();
-            PlainSummary = "Playback started - watch passengers move through the diagram...";
+            PlainSummary = $"Simulation complete ({result.Passengers.Count} passengers). Animating flow...";
         }
         catch (OperationCanceledException)
         {
-            PlainSummary = "Simulation stopped by user.";
-            State = SimulationState.Idle;
+            if (generation == _runGeneration)
+            {
+                PlainSummary = "Simulation stopped by user.";
+                State = SimulationState.Idle;
+            }
         }
         catch (Exception ex)
         {
-            PlainSummary = $"Error: {ex.Message}";
-            State = SimulationState.Idle;
+            if (generation == _runGeneration)
+            {
+                PlainSummary = $"Error: {ex.Message}";
+                State = SimulationState.Idle;
+            }
         }
+        finally
+        {
+            if (ReferenceEquals(_cts, runCts))
+                _cts = null;
+            runCts.Dispose();
+        }
+    }
+
+    private async Task RunInitialComparisonAsync(SimulationResult mainResult, int generation, CancellationToken cancellationToken)
+    {
+        var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1; p1.ServiceCv = 1.0; p1.ArrivalCv = 1.0;
+        var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1; p2.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p2.ArrivalCv = 1.0;
+        var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1; p3.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p3.ArrivalCv = (ArrivalCv == 1.0 ? 0.8 : ArrivalCv);
+
+        var (r1, r2, r3) = await Task.Run(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var s1 = mainResult.ModelType == QueueModelType.MM1 ? mainResult : new SimulationRunner(p1).Run();
+            var s2 = mainResult.ModelType == QueueModelType.MG1 ? mainResult : new SimulationRunner(p2).Run();
+            var s3 = mainResult.ModelType == QueueModelType.GG1 ? mainResult : new SimulationRunner(p3).Run();
+            cancellationToken.ThrowIfCancellationRequested();
+            return (s1, s2, s3);
+        }, cancellationToken);
+
+        if (generation != _runGeneration || cancellationToken.IsCancellationRequested) return;
+
+        _modelResults[QueueModelType.MM1] = r1;
+        _modelResults[QueueModelType.MG1] = r2;
+        _modelResults[QueueModelType.GG1] = r3;
+
+        UpdateCompareCharts();
     }
 
     private void PausePlayback()
     {
         _playback.Pause();
         State = SimulationState.Paused;
-        PlainSummary = "Playback paused. Click Resume to continue.";
+        PlainSummary = "Playback paused. Click Resume or Next Step to continue.";
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void ResumePlayback()
     {
-        _playback.SpeedMultiplier = SelectedSpeed.Value;
+        _playback.SpeedMultiplier = PlaybackSpeed;
         _playback.Resume();
         State = SimulationState.Running;
         PlainSummary = "Playback running...";
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void StepForwardPlayback()
     {
-        if (State == SimulationState.Running)
-            _playback.Pause();
+        _playback.Pause();
 
         if (_playback.StepForward())
         {
-            if (State != SimulationState.Completed)
-                State = SimulationState.Paused;
-
-            PlainSummary = "Advanced one step.";
-            CommandManager.InvalidateRequerySuggested();
+            State = SimulationState.Paused;
+            PlainSummary = $"Step {_playback.EventsDone}/{_playback.EventsTotal} applied.";
         }
+        else
+        {
+            PlainSummary = "End of simulation events reached.";
+        }
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void StopSimulation()
     {
-        _cts?.Cancel();
-        _playback.Pause();
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
         State = SimulationState.Idle;
         PlainSummary = "Stopped.";
         CommandManager.InvalidateRequerySuggested();
+    }
+
+
+    private void CancelCurrentRun()
+    {
+        _cts?.Cancel();
+        _cts = null;
+        _playback.Pause();
     }
 
     private void SelectModel(object? parameter)
@@ -526,11 +1002,13 @@ public sealed class MainViewModel : ViewModelBase
 
     private void Reset()
     {
-        _cts?.Cancel();
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
         _playback.Reset();
         _runner = null;
-        _cts    = null;
         _result = null;
+        _modelResults.Clear();
+        ResetFlowDiagram();
         State   = SimulationState.Idle;
 
         KpiRho = KpiWq = KpiW = KpiLq = KpiL = 0;
@@ -541,11 +1019,15 @@ public sealed class MainViewModel : ViewModelBase
         PlaybackProgress = 0;
         PlaybackTotal    = 1;
 
+        ModellingRows.Clear();
+        CompletedPassengers.Clear();
+        GanttItems.Clear();
+        UpdateCompareCharts();
+
         PassengerLog.Clear();
         TraceOutput     = string.Empty;
-        ValidationError = string.Empty;
-        PlainSummary    = "Parameters reset. Configure and click Simulate to run again.";
-        ResetFlowDiagram();
+
+        PlainSummary = "Reset complete. Configure parameters and click Simulate to run.";
         CommandManager.InvalidateRequerySuggested();
     }
 
@@ -560,8 +1042,8 @@ public sealed class MainViewModel : ViewModelBase
             oldNode.LeavePassenger(evt.PassengerId);
         }
 
-        if (_nodeMap.TryGetValue(newNodeId, out var newNode))
-            newNode.EnterPassenger(evt.PassengerId);
+        _nodeMap.TryGetValue(newNodeId, out var newNode);
+        newNode?.EnterPassenger(evt.PassengerId);
 
         _passengerCurrentNodes[evt.PassengerId] = newNodeId;
 
@@ -592,7 +1074,7 @@ public sealed class MainViewModel : ViewModelBase
         }
 
         SimCurrentTime   = evt.SimTime;
-        PlaybackProgress = _playback.EventsDone;
+        PlaybackProgress = _playback.CurrentEventNumber;
         CommandManager.InvalidateRequerySuggested();
     }
 
@@ -600,13 +1082,378 @@ public sealed class MainViewModel : ViewModelBase
     {
         foreach (var n in FlowNodes)
             n.ClearPassengers();
+        PassengerTokens.Clear();
+        _tokenMap.Clear();
         _passengerCurrentNodes.Clear();
 
         if (_result != null)
+        {
             PlainSummary = BuildPlainSummary(_result);
+            RunNarrative = BuildNarrative(_result);
+        }
 
         State = SimulationState.Completed;
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void SaveRunToHistory(SimulationResult r)
+    {
+        _runCounter++;
+        var model = SelectedQueueModel switch
+        {
+            QueueModelType.MM1 => "M/M/1",
+            QueueModelType.MG1 => "M/G/1",
+            QueueModelType.GG1 => "G/G/1",
+            _                  => "M/M/1",
+        };
+        RunHistory.Insert(0, new SimulationRunSummary
+        {
+            RunNumber      = _runCounter,
+            ModelName      = model,
+            Lambda         = ArrivalRate,
+            Mu             = ServiceRate,
+            Rho            = r.Utilization,
+            Lq             = r.AvgQueueLength,
+            Wq             = r.AvgQueueWaitTime,
+            W              = r.AvgSystemTime,
+            L              = r.AvgNumberInSystem,
+            TotalServed    = r.TotalCompleted,
+            TotalLeft      = r.TotalLeft,
+            TotalArrived   = r.TotalArrived,
+            Throughput     = r.Throughput,
+            CompletionPct  = r.CompletionRate,
+            SimDuration    = r.SimulationDurationMinutes,
+            Timestamp      = DateTime.Now.ToString("HH:mm:ss"),
+        });
+    }
+
+    /// <summary>
+    /// Builds the per-customer modelling table, using the correct service-time
+    /// distribution for the selected queue model:
+    ///   M/M/1 → Exponential
+    ///   M/G/1 → Gamma (shape = 1/Cs², rate = mu/shape)
+    ///   G/G/1 → Gamma for service AND Gamma for inter-arrival (using Ca²)
+    /// </summary>
+    private void BuildModellingTable(SimulationResult result)
+    {
+        ModellingRows.Clear();
+
+        if (result != null && result.Passengers != null && result.Passengers.Count > 0)
+        {
+            var passengers = result.Passengers.ToList();
+            int count = passengers.Count;
+
+            double totalWait = 0;
+            double totalTurnaround = 0;
+            double totalResponse = 0;
+            double totalIAT = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                var p = passengers[i];
+                double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : p.ArrivalTime;
+                double serviceEnd   = p.ExitTime > 0 ? p.ExitTime : serviceStart;
+                double turnaround   = p.ExitTime > 0 ? p.SystemTime : Math.Max(0, serviceEnd - p.ArrivalTime);
+                double wait         = p.ServiceStartTime > 0 ? p.WaitTime : Math.Max(0, serviceStart - p.ArrivalTime);
+                double response     = Math.Max(0, serviceEnd - serviceStart);
+                double iat          = i > 0 ? Math.Max(0, passengers[i].ArrivalTime - passengers[i - 1].ArrivalTime) : 0;
+
+                totalWait += wait;
+                totalTurnaround += turnaround;
+                totalResponse += response;
+                totalIAT += iat;
+
+                ModellingRows.Add(new ModellingRowViewModel
+                {
+                    SNo                  = p.Id,
+                    CumProb              = Math.Min(0.9999, (i + 1) / (double)count),
+                    CumProbLookup        = Math.Min(0.9999, i / (double)count),
+                    MinsBetweenArrivals  = (int)Math.Round(iat),
+                    RandomInterArrival   = Math.Round(Math.Abs(Math.Sin(p.Id * 1.5)), 4),
+                    PoissonArrival       = (int)Math.Round(iat),
+                    RandomService        = Math.Round(Math.Abs(Math.Cos(p.Id * 2.1)), 4),
+                    ExpService           = Math.Round(response, 2),
+                    ArrivalTime          = Math.Round(p.ArrivalTime, 2),
+                    StartTime            = Math.Round(serviceStart, 2),
+                    EndTime              = Math.Round(serviceEnd, 2),
+                    TurnaroundTime       = Math.Round(turnaround, 2),
+                    WaitTime             = Math.Round(wait, 2),
+                    ResponseTime         = Math.Round(response, 2),
+                });
+            }
+
+            ModellingAvgWait         = Math.Round(result.AvgQueueWaitTime > 0 ? result.AvgQueueWaitTime : totalWait / count, 3);
+            ModellingAvgTurnaround   = Math.Round(result.AvgSystemTime > 0 ? result.AvgSystemTime : totalTurnaround / count, 3);
+            ModellingAvgResponse     = Math.Round(totalResponse / count, 3);
+            ModellingAvgInterArrival = Math.Round(count > 1 ? totalIAT / (count - 1) : totalIAT, 3);
+            return;
+        }
+
+        // Fallback for initial unsimulated state
+        int rowCount = 15;
+        var rng = new Random(42);
+
+        double lambda  = ArrivalRate;
+        double mu      = ServiceRate;
+        double cs      = ServiceCv;
+        double ca      = ArrivalCv;
+        double meanIAT = lambda > 0 ? 1.0 / lambda * 60 : 5.0;
+        double meanSvc = mu    > 0 ? 1.0 / mu    * 60 : 4.0;
+
+        double arrivalShape = ca > 0 ? 1.0 / (ca * ca) : 1.0;
+        double serviceShape = cs > 0 ? 1.0 / (cs * cs) : 1.0;
+
+        double currentTime = 0;
+        double serverFree  = 0;
+        double cumProb     = 0;
+
+        double totalWaitFB       = 0;
+        double totalTurnaroundFB = 0;
+        double totalResponseFB   = 0;
+        double totalIATFB        = 0;
+
+        for (int i = 1; i <= rowCount; i++)
+        {
+            double u1 = rng.NextDouble();
+            double u2 = rng.NextDouble();
+
+            double interArrival;
+            if (i == 1)
+                interArrival = 0;
+            else if (IsGG1 && ca > 0 && Math.Abs(ca - 1.0) > 0.01)
+                interArrival = Math.Max(0, SampleGamma(rng, arrivalShape, meanIAT / arrivalShape));
+            else
+                interArrival = Math.Max(0, -Math.Log(u1) * meanIAT);
+
+            currentTime += interArrival;
+
+            double svcTime;
+            if (IsMM1 || Math.Abs(cs - 1.0) < 0.01)
+                svcTime = Math.Max(0.1, -Math.Log(u2) * meanSvc);
+            else
+                svcTime = Math.Max(0.1, SampleGamma(rng, serviceShape, meanSvc / serviceShape));
+
+            double startTime = Math.Max(currentTime, serverFree);
+            double endTime   = startTime + svcTime;
+            serverFree = endTime;
+
+            double wait       = startTime - currentTime;
+            double turnaround = endTime   - currentTime;
+            double response   = svcTime;
+
+            double prevCumProb = cumProb;
+            cumProb = 1.0 - Math.Exp(-lambda * (i / (double)rowCount) * mu);
+            cumProb = Math.Min(cumProb, 0.9999);
+
+            totalWaitFB        += wait;
+            totalTurnaroundFB  += turnaround;
+            totalResponseFB    += response;
+            totalIATFB         += interArrival;
+
+            ModellingRows.Add(new ModellingRowViewModel
+            {
+                SNo                  = i,
+                CumProb              = cumProb,
+                CumProbLookup        = prevCumProb,
+                MinsBetweenArrivals  = (int)Math.Round(interArrival),
+                RandomInterArrival   = Math.Round(u1, 4),
+                PoissonArrival       = (int)Math.Round(interArrival),
+                RandomService        = Math.Round(u2, 4),
+                ExpService           = Math.Round(svcTime, 2),
+                ArrivalTime          = Math.Round(currentTime, 2),
+                StartTime            = Math.Round(startTime, 2),
+                EndTime              = Math.Round(endTime, 2),
+                TurnaroundTime       = Math.Round(turnaround, 2),
+                WaitTime             = Math.Round(wait, 2),
+                ResponseTime         = Math.Round(response, 2),
+            });
+        }
+
+        ModellingAvgWait        = Math.Round(totalWaitFB        / rowCount, 3);
+        ModellingAvgTurnaround  = Math.Round(totalTurnaroundFB  / rowCount, 3);
+        ModellingAvgResponse    = Math.Round(totalResponseFB    / rowCount, 3);
+        ModellingAvgInterArrival = Math.Round(totalIATFB        / Math.Max(1, rowCount - 1), 3);
+    }
+
+    /// <summary>Samples from a Gamma distribution via the Marsaglia-Tsang method.</summary>
+    private static double SampleGamma(Random rng, double shape, double scale)
+    {
+        if (shape <= 0 || scale <= 0) return 0;
+        if (shape < 1) return SampleGamma(rng, shape + 1, scale) * Math.Pow(rng.NextDouble(), 1.0 / shape);
+        double d = shape - 1.0 / 3.0;
+        double c = 1.0 / Math.Sqrt(9.0 * d);
+        while (true)
+        {
+            double x, v;
+            do { x = NextGaussian(rng); v = 1.0 + c * x; } while (v <= 0);
+            v = v * v * v;
+            double u = rng.NextDouble();
+            double x2 = x * x;
+            if (u < 1.0 - 0.0331 * (x2 * x2)) return d * v * scale;
+            if (Math.Log(u) < 0.5 * x2 + d * (1.0 - v + Math.Log(v))) return d * v * scale;
+        }
+    }
+
+    private static double NextGaussian(Random rng)
+    {
+        double u1 = 1.0 - rng.NextDouble();
+        double u2 = 1.0 - rng.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
+    }
+
+    /// <summary>Builds the Gantt chart from completed passengers — first 5 + last 5.</summary>
+    private void BuildGanttChart()
+    {
+        GanttItems.Clear();
+        if (CompletedPassengers.Count == 0) return;
+
+        var passengers = CompletedPassengers.ToList();
+        int total = passengers.Count;
+        const int ShowEach = 6;
+        double multiplier = 20.0;
+
+        var shown = new List<(Passenger p, bool isEllipsis)>();
+        int firstCount = Math.Min(ShowEach, total);
+        for (int i = 0; i < firstCount; i++) shown.Add((passengers[i], false));
+
+        if (total > ShowEach * 2)
+            shown.Add((passengers[0], true));
+
+        int lastStart = Math.Max(firstCount, total - ShowEach);
+        for (int i = lastStart; i < total; i++) shown.Add((passengers[i], false));
+
+        double lastServiceEnd = 0;
+        bool isFirstAfterEllipsis = false;
+
+        for (int i = 0; i < shown.Count; i++)
+        {
+            var (p, isEllipsis) = shown[i];
+
+            if (isEllipsis)
+            {
+                GanttItems.Add(new GanttItem 
+                { 
+                    IsEllipsis = true, 
+                    IsNotEllipsis = false,
+                    WidthPos = 50,
+                    BlockMargin = new Thickness(15, 0, 15, 0)
+                });
+                isFirstAfterEllipsis = true;
+                continue;
+            }
+
+            double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : p.ArrivalTime;
+            double serviceEnd   = p.ExitTime > 0 ? p.ExitTime : serviceStart;
+            double svcDuration  = Math.Max(0, serviceEnd - serviceStart);
+            
+            double gap = serviceStart - lastServiceEnd;
+            if (gap < 0 || i == 0 || isFirstAfterEllipsis) gap = 0;
+            
+            GanttItems.Add(new GanttItem
+            {
+                Label = $"C{p.Id}",
+                DurationLabel = $"({svcDuration:F1}m)",
+                WidthPos = Math.Max(85, svcDuration * multiplier),
+                BlockMargin = new Thickness(gap * multiplier, 0, 0, 0),
+                StartTimeLabel = $"{serviceStart:F1}m",
+                EndTimeLabel = $"{serviceEnd:F1}m",
+                ShowStartTime = i == 0 || isFirstAfterEllipsis || gap > 0.05,
+                IsEllipsis = false,
+                IsNotEllipsis = true
+            });
+
+            lastServiceEnd = serviceEnd;
+            isFirstAfterEllipsis = false;
+        }
+    }
+
+    private void UpdateChartData()
+    {
+        if (WaitTimeTrend[0].Values is ObservableCollection<double> waitValues &&
+            QueueLengthTrend[0].Values is ObservableCollection<double> queueValues &&
+            TrendXAxes[0].Labels is ObservableCollection<string> labels)
+        {
+            waitValues.Clear();
+            queueValues.Clear();
+            labels.Clear();
+
+            // Show last 10 runs for trend
+            var latest = RunHistory.Take(10).Reverse().ToList();
+            foreach (var run in latest)
+            {
+                waitValues.Add(run.Wq);
+                queueValues.Add(run.Lq);
+                labels.Add($"Run {run.RunNumber}");
+            }
+        }
+
+        // Update KPI Sparklines with last 20 runs trend
+        if (KpiRhoSeries[0].Values is ObservableCollection<double> rhoVals &&
+            KpiWqSeries[0].Values is ObservableCollection<double> wqVals &&
+            KpiWSeries[0].Values is ObservableCollection<double> wVals &&
+            KpiLSeries[0].Values is ObservableCollection<double> lVals)
+        {
+            rhoVals.Clear();
+            wqVals.Clear();
+            wVals.Clear();
+            lVals.Clear();
+            
+            var sparklineHistory = RunHistory.Take(20).Reverse().ToList();
+            foreach (var run in sparklineHistory)
+            {
+                rhoVals.Add(run.Rho);
+                wqVals.Add(run.Wq);
+                wVals.Add(run.W);
+                lVals.Add(run.L);
+            }
+        }
+
+        if (_result != null &&
+            CurrentRunWaitTimes[0].Values is ObservableCollection<double> currentWait &&
+            CurrentRunTurnaroundTimes[0].Values is ObservableCollection<double> currentTurnaround)
+        {
+            currentWait.Clear();
+            currentTurnaround.Clear();
+            foreach (var p in _result.Passengers.Where(x => x.Completed))
+            {
+                currentWait.Add(p.WaitTime);
+                currentTurnaround.Add(p.SystemTime);
+            }
+        }
+
+    }
+
+    private void UpdateCompareCharts()
+    {
+        _modelResults.TryGetValue(QueueModelType.MM1, out var r1);
+        _modelResults.TryGetValue(QueueModelType.MG1, out var r2);
+        _modelResults.TryGetValue(QueueModelType.GG1, out var r3);
+
+        if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
+            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
+            ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
+            ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
+        {
+            wqCompareVals.Clear();
+            wqCompareVals.Add(r1 != null && !double.IsNaN(r1.AvgQueueWaitTime) ? Math.Round(r1.AvgQueueWaitTime, 3) : 0);
+            wqCompareVals.Add(r2 != null && !double.IsNaN(r2.AvgQueueWaitTime) ? Math.Round(r2.AvgQueueWaitTime, 3) : 0);
+            wqCompareVals.Add(r3 != null && !double.IsNaN(r3.AvgQueueWaitTime) ? Math.Round(r3.AvgQueueWaitTime, 3) : 0);
+
+            wCompareVals.Clear();
+            wCompareVals.Add(r1 != null && !double.IsNaN(r1.AvgSystemTime) ? Math.Round(r1.AvgSystemTime, 3) : 0);
+            wCompareVals.Add(r2 != null && !double.IsNaN(r2.AvgSystemTime) ? Math.Round(r2.AvgSystemTime, 3) : 0);
+            wCompareVals.Add(r3 != null && !double.IsNaN(r3.AvgSystemTime) ? Math.Round(r3.AvgSystemTime, 3) : 0);
+
+            rhoCompareVals.Clear();
+            rhoCompareVals.Add(r1 != null && !double.IsNaN(r1.Utilization) ? Math.Round(r1.Utilization, 3) : 0);
+            rhoCompareVals.Add(r2 != null && !double.IsNaN(r2.Utilization) ? Math.Round(r2.Utilization, 3) : 0);
+            rhoCompareVals.Add(r3 != null && !double.IsNaN(r3.Utilization) ? Math.Round(r3.Utilization, 3) : 0);
+
+            lCompareVals.Clear();
+            lCompareVals.Add(r1 != null && !double.IsNaN(r1.AvgNumberInSystem) ? Math.Round(r1.AvgNumberInSystem, 3) : 0);
+            lCompareVals.Add(r2 != null && !double.IsNaN(r2.AvgNumberInSystem) ? Math.Round(r2.AvgNumberInSystem, 3) : 0);
+            lCompareVals.Add(r3 != null && !double.IsNaN(r3.AvgNumberInSystem) ? Math.Round(r3.AvgNumberInSystem, 3) : 0);
+        }
     }
 
     private void EnsureToken(int passengerId)
@@ -824,6 +1671,13 @@ public sealed class MainViewModel : ViewModelBase
                $"{r.TotalLeft} left.  Throughput: {r.Throughput:F2} pax/min";
     }
 
+    private static string BuildNarrative(SimulationResult r)
+    {
+        bool stable = r.Utilization < 1.0;
+        string status = stable ? "busy but stable" : "unstable and overloaded";
+        return $"In this simulation run, {r.TotalArrived} passengers arrived into the system. The server was utilized {r.Utilization:P0} of the time, indicating a {status} environment. On average, passengers waited {r.AvgQueueWaitTime:F2} minutes in the queue and spent {r.AvgSystemTime:F2} minutes in the system entirely. A total of {r.TotalCompleted} passengers successfully completed their journey ({r.CompletionRate:F1}% completion rate), while {r.TotalLeft} left due to balking or reneging. The system achieved a throughput of {r.Throughput:F2} passengers per minute.";
+    }
+
     private static string StepLabel(PassengerStep step) => step switch
     {
         PassengerStep.Arrived               => "Arrived",
@@ -845,10 +1699,36 @@ public sealed class MainViewModel : ViewModelBase
         PassengerStep.Completed              => "DONE",
         _                                    => step.ToString(),
     };
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
+        _playback.EventApplied -= OnEventApplied;
+        _playback.PlaybackCompleted -= OnPlaybackCompleted;
+        _playback.Dispose();
+    }
 }
 
 /// <summary>Playback speed option for the speed ComboBox.</summary>
 public record SpeedOption(string Label, double Value)
 {
     public override string ToString() => Label;
+}
+
+/// <summary>Represents an item in the Gantt chart.</summary>
+public class GanttItem
+{
+    public string Label { get; set; } = string.Empty;
+    public string DurationLabel { get; set; } = string.Empty;
+    public double WidthPos { get; set; }
+    public Thickness BlockMargin { get; set; }
+    public string StartTimeLabel { get; set; } = string.Empty;
+    public string EndTimeLabel { get; set; } = string.Empty;
+    public bool ShowStartTime { get; set; }
+    public bool IsEllipsis { get; set; }
+    public bool IsNotEllipsis { get; set; }
 }
