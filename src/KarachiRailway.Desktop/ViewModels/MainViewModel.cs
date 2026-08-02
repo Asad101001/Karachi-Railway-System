@@ -80,8 +80,6 @@ public sealed class MainViewModel : ViewModelBase
         _playback.PlaybackCompleted += OnPlaybackCompleted;
 
         BuildFlowDiagram();
-
-        _ = RunInitialComparisonAsync();
     }
 
     private readonly Dictionary<QueueModelType, SimulationResult> _modelResults = new();
@@ -171,8 +169,8 @@ public sealed class MainViewModel : ViewModelBase
                     if (ArrivalCv == 1.0) ArrivalCv = 0.5;
                 }
                 
-                // Automatically re-run simulation for the newly selected queue model to keep ALL tabs (Home, Model, Metrics, Reports, Compare) 100% consistent!
-                if (State is SimulationState.Idle or SimulationState.Completed)
+                // Automatically re-run simulation for the newly selected queue model ONLY IF a simulation has already been executed
+                if (_result != null && State is SimulationState.Idle or SimulationState.Completed)
                 {
                     _ = StartSimulationAsync();
                 }
@@ -464,10 +462,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Queue Model Type",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             Labels = new[] { "M/M/1", "M/G/1", "G/G/1" },
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 12,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
         } 
     };
@@ -477,10 +476,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Utilization Factor (ρ)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -490,10 +490,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Avg Passengers in System (L)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -503,10 +504,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Avg Queue Wait Wq (mins)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -516,10 +518,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Avg System Time W (mins)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -529,10 +532,11 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Simulation Run History",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             Labels = new ObservableCollection<string>(),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
         } 
     };
@@ -542,11 +546,12 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Queue Wait Wq (mins)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             Labeler = value => value.ToString("0.00"),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -556,11 +561,12 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Queue Length Lq (passengers)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             Labeler = value => value.ToString("0.00"),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -570,9 +576,10 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Passenger Sequence Number",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
         } 
     };
@@ -582,11 +589,12 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Wait Time Wq (mins)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             Labeler = value => value.ToString("0.00"),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };
@@ -596,11 +604,12 @@ public sealed class MainViewModel : ViewModelBase
         new Axis 
         { 
             Name = "Turnaround Time W (mins)",
+            NameTextSize = 10,
             NamePaint = new SolidColorPaint(SKColor.Parse("#475569")),
             MinLimit = 0,
             Labeler = value => value.ToString("0.00"),
             LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
-            TextSize = 11,
+            TextSize = 9,
             SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
         } 
     };

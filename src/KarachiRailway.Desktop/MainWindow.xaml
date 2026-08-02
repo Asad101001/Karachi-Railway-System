@@ -1173,7 +1173,7 @@
                                 <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                         BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="240">
                                     <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}" XAxes="{Binding CurrentRunXAxes}" YAxes="{Binding CurrentWaitYAxes}"
-                                                        Margin="10,10,10,16"/>
+                                                        Margin="24,10,12,20"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1197,7 +1197,7 @@
                                 <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                         BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="240">
                                     <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}" XAxes="{Binding CurrentRunXAxes}" YAxes="{Binding CurrentTurnaroundYAxes}"
-                                                        Margin="10,10,10,16"/>
+                                                        Margin="24,10,12,20"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1438,7 +1438,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareUtilizationYAxes}" Margin="10,10,10,16"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareUtilizationYAxes}" Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1452,7 +1452,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareLYAxes}" Margin="10,10,10,16"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareLYAxes}" Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1466,7 +1466,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWqYAxes}" Margin="10,10,10,16"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWqYAxes}" Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1480,7 +1480,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWYAxes}" Margin="10,10,10,16"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWYAxes}" Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1510,7 +1510,7 @@
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                             BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
                                         <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding TrendXAxes}" YAxes="{Binding WaitTimeTrendYAxes}"
-                                                            Margin="10,10,10,16"/>
+                                                            Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1532,7 +1532,7 @@
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                             BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
                                         <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding TrendXAxes}" YAxes="{Binding QueueLengthTrendYAxes}"
-                                                            Margin="10,10,10,16"/>
+                                                            Margin="24,10,12,20"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -2213,33 +2213,72 @@
                                     CornerRadius="14" Padding="24,20"
                                     BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
                                 <StackPanel>
-                                    <TextBlock Text="DEVELOPED BY" Style="{StaticResource HeadingSmall}" Margin="0,0,0,12"/>
-                                    <WrapPanel Margin="0,0,0,12">
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Rizwan" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="PROJECT CONTRIBUTORS" Style="{StaticResource HeadingSmall}" Margin="0,0,0,14"/>
+                                    <UniformGrid Columns="2" Rows="4">
+                                        <!-- Ammara Batool -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Ammara Batool" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006023" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Asad" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Anabia Nasir -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Anabia Nasir" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006024" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Anabia" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Hasnain Ahmed -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Hasnain Ahmed" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006050" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Ammara" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Maryam Mahmood -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Maryam Mahmood" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006063" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Maryam" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Momina Azeez Qazi -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Momina Azeez Qazi" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006071" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Momina" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Muhammad Asad Khan -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Muhammad Asad Khan" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006087" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Hasnain" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- Rizwan Saeed Ellahi -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="Rizwan Saeed Ellahi" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006122" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
-                                            <TextBlock Text="Ahmed Hussain" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+
+                                        <!-- S.M Ahmed Hussain -->
+                                        <Border Background="#F9FAFB" CornerRadius="10" Padding="14,12" Margin="6" BorderThickness="1" BorderBrush="#E5E7EB">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="S.M Ahmed Hussain" FontWeight="Bold" FontSize="14" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="B24110006142" FontSize="12" Foreground="#374151" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
                                         </Border>
-                                    </WrapPanel>
+                                    </UniformGrid>
                                     <Border Height="2" CornerRadius="1" Background="{StaticResource GoldAccentGradient}"
                                             HorizontalAlignment="Left" Width="120" Margin="0,14,0,0"/>
                                 </StackPanel>
