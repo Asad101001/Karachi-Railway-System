@@ -88,13 +88,25 @@ public sealed class MainViewModel : ViewModelBase
     {
         try
         {
+            var mainParams = BuildParameters();
+            _runner = new SimulationRunner(mainParams);
+            var result = await Task.Run(() => _runner.Run());
+            _result = result;
+
+            ApplyResult(result);
+            BuildModellingTable(result);
+            BuildGanttChart();
+
             var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1; p1.ServiceCv = 1.0; p1.ArrivalCv = 1.0;
             var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1; p2.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p2.ArrivalCv = 1.0;
             var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1; p3.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p3.ArrivalCv = (ArrivalCv == 1.0 ? 0.8 : ArrivalCv);
 
             var (r1, r2, r3) = await Task.Run(() =>
             {
-                return (new SimulationRunner(p1).Run(), new SimulationRunner(p2).Run(), new SimulationRunner(p3).Run());
+                var sim1 = result.ModelType == QueueModelType.MM1 ? result : new SimulationRunner(p1).Run();
+                var sim2 = result.ModelType == QueueModelType.MG1 ? result : new SimulationRunner(p2).Run();
+                var sim3 = result.ModelType == QueueModelType.GG1 ? result : new SimulationRunner(p3).Run();
+                return (sim1, sim2, sim3);
             });
 
             UpdateCompareCharts(r1, r2, r3);
@@ -167,10 +179,10 @@ public sealed class MainViewModel : ViewModelBase
                     if (ArrivalCv == 1.0) ArrivalCv = 0.5;
                 }
                 
-                // Update table with dummy data to preview model behavior
-                if (ModellingRows.Count > 0)
+                // Automatically re-run simulation for the newly selected queue model to keep ALL tabs (Home, Model, Metrics, Reports, Compare) 100% consistent!
+                if (State is SimulationState.Idle or SimulationState.Completed)
                 {
-                    BuildModellingTable(new SimulationResult { TotalArrived = 15 });
+                    _ = StartSimulationAsync();
                 }
             }
         }
@@ -983,7 +995,59 @@ public sealed class MainViewModel : ViewModelBase
     {
         ModellingRows.Clear();
 
-        int rowCount = Math.Min(25, Math.Max(8, result.TotalArrived > 0 ? result.TotalArrived : 15));
+        if (result != null && result.Passengers != null && result.Passengers.Count > 0)
+        {
+            var passengers = result.Passengers.Take(30).ToList();
+            int count = passengers.Count;
+
+            double totalWait = 0;
+            double totalTurnaround = 0;
+            double totalResponse = 0;
+            double totalIAT = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                var p = passengers[i];
+                double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : p.ArrivalTime;
+                double serviceEnd   = p.ExitTime > 0 ? p.ExitTime : serviceStart;
+                double turnaround   = p.ExitTime > 0 ? p.SystemTime : Math.Max(0, serviceEnd - p.ArrivalTime);
+                double wait         = p.ServiceStartTime > 0 ? p.WaitTime : Math.Max(0, serviceStart - p.ArrivalTime);
+                double response     = Math.Max(0, serviceEnd - serviceStart);
+                double iat          = i > 0 ? Math.Max(0, passengers[i].ArrivalTime - passengers[i - 1].ArrivalTime) : 0;
+
+                totalWait += wait;
+                totalTurnaround += turnaround;
+                totalResponse += response;
+                totalIAT += iat;
+
+                ModellingRows.Add(new ModellingRowViewModel
+                {
+                    SNo                  = p.Id,
+                    CumProb              = Math.Min(0.9999, (i + 1) / (double)count),
+                    CumProbLookup        = Math.Min(0.9999, i / (double)count),
+                    MinsBetweenArrivals  = (int)Math.Round(iat),
+                    RandomInterArrival   = Math.Round(Math.Abs(Math.Sin(p.Id * 1.5)), 4),
+                    PoissonArrival       = (int)Math.Round(iat),
+                    RandomService        = Math.Round(Math.Abs(Math.Cos(p.Id * 2.1)), 4),
+                    ExpService           = Math.Round(response, 2),
+                    ArrivalTime          = Math.Round(p.ArrivalTime, 2),
+                    StartTime            = Math.Round(serviceStart, 2),
+                    EndTime              = Math.Round(serviceEnd, 2),
+                    TurnaroundTime       = Math.Round(turnaround, 2),
+                    WaitTime             = Math.Round(wait, 2),
+                    ResponseTime         = Math.Round(response, 2),
+                });
+            }
+
+            ModellingAvgWait         = Math.Round(result.AvgQueueWaitTime > 0 ? result.AvgQueueWaitTime : totalWait / count, 3);
+            ModellingAvgTurnaround   = Math.Round(result.AvgSystemTime > 0 ? result.AvgSystemTime : totalTurnaround / count, 3);
+            ModellingAvgResponse     = Math.Round(totalResponse / count, 3);
+            ModellingAvgInterArrival = Math.Round(count > 1 ? totalIAT / (count - 1) : totalIAT, 3);
+            return;
+        }
+
+        // Fallback for initial unsimulated state
+        int rowCount = 15;
         var rng = new Random(42);
 
         double lambda  = ArrivalRate;
@@ -993,37 +1057,33 @@ public sealed class MainViewModel : ViewModelBase
         double meanIAT = lambda > 0 ? 1.0 / lambda * 60 : 5.0;
         double meanSvc = mu    > 0 ? 1.0 / mu    * 60 : 4.0;
 
-        // For G/G/1: inter-arrival shape from Ca²
         double arrivalShape = ca > 0 ? 1.0 / (ca * ca) : 1.0;
-        // For M/G/1 & G/G/1: service shape from Cs²
         double serviceShape = cs > 0 ? 1.0 / (cs * cs) : 1.0;
 
         double currentTime = 0;
         double serverFree  = 0;
         double cumProb     = 0;
 
-        double totalWait       = 0;
-        double totalTurnaround = 0;
-        double totalResponse   = 0;
-        double totalIAT        = 0;
+        double totalWaitFB       = 0;
+        double totalTurnaroundFB = 0;
+        double totalResponseFB   = 0;
+        double totalIATFB        = 0;
 
         for (int i = 1; i <= rowCount; i++)
         {
             double u1 = rng.NextDouble();
             double u2 = rng.NextDouble();
 
-            // Inter-arrival time
             double interArrival;
             if (i == 1)
                 interArrival = 0;
             else if (IsGG1 && ca > 0 && Math.Abs(ca - 1.0) > 0.01)
                 interArrival = Math.Max(0, SampleGamma(rng, arrivalShape, meanIAT / arrivalShape));
             else
-                interArrival = Math.Max(0, -Math.Log(u1) * meanIAT); // Exponential (M/M/1 & M/G/1)
+                interArrival = Math.Max(0, -Math.Log(u1) * meanIAT);
 
             currentTime += interArrival;
 
-            // Service time
             double svcTime;
             if (IsMM1 || Math.Abs(cs - 1.0) < 0.01)
                 svcTime = Math.Max(0.1, -Math.Log(u2) * meanSvc);
@@ -1042,10 +1102,10 @@ public sealed class MainViewModel : ViewModelBase
             cumProb = 1.0 - Math.Exp(-lambda * (i / (double)rowCount) * mu);
             cumProb = Math.Min(cumProb, 0.9999);
 
-            totalWait        += wait;
-            totalTurnaround  += turnaround;
-            totalResponse    += response;
-            totalIAT         += interArrival;
+            totalWaitFB        += wait;
+            totalTurnaroundFB  += turnaround;
+            totalResponseFB    += response;
+            totalIATFB         += interArrival;
 
             ModellingRows.Add(new ModellingRowViewModel
             {
@@ -1066,13 +1126,10 @@ public sealed class MainViewModel : ViewModelBase
             });
         }
 
-        if (rowCount > 0)
-        {
-            ModellingAvgWait        = Math.Round(totalWait        / rowCount, 3);
-            ModellingAvgTurnaround  = Math.Round(totalTurnaround  / rowCount, 3);
-            ModellingAvgResponse    = Math.Round(totalResponse    / rowCount, 3);
-            ModellingAvgInterArrival = Math.Round(totalIAT        / Math.Max(1, rowCount - 1), 3);
-        }
+        ModellingAvgWait        = Math.Round(totalWaitFB        / rowCount, 3);
+        ModellingAvgTurnaround  = Math.Round(totalTurnaroundFB  / rowCount, 3);
+        ModellingAvgResponse    = Math.Round(totalResponseFB    / rowCount, 3);
+        ModellingAvgInterArrival = Math.Round(totalIATFB        / Math.Max(1, rowCount - 1), 3);
     }
 
     /// <summary>Samples from a Gamma distribution via the Marsaglia-Tsang method.</summary>
