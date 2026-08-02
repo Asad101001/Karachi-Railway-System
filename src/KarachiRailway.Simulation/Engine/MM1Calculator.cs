@@ -33,10 +33,10 @@ public static class MM1Calculator
         double l = rho / (1.0 - rho);
 
         // Average wait time in queue
-        double wq = (lq / lambda) * 10.0;
+        double wq = lq / lambda;
 
         // Average time in system
-        double w = (l / lambda) * 10.0;
+        double w = l / lambda;
 
         return (rho, lq, l, wq, w);
     }

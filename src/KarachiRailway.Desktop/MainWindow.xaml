@@ -1171,9 +1171,9 @@
 
                                 <!-- LiveCharts Canvas -->
                                 <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
-                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                        Margin="10"/>
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="240">
+                                    <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}" XAxes="{Binding CurrentRunXAxes}" YAxes="{Binding CurrentWaitYAxes}"
+                                                        Margin="10,10,10,16"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1195,9 +1195,9 @@
 
                                 <!-- LiveCharts Canvas -->
                                 <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
-                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                        Margin="10"/>
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="240">
+                                    <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}" XAxes="{Binding CurrentRunXAxes}" YAxes="{Binding CurrentTurnaroundYAxes}"
+                                                        Margin="10,10,10,16"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1438,7 +1438,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareUtilizationYAxes}" Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1452,7 +1452,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareLYAxes}" Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1466,7 +1466,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWqYAxes}" Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1480,7 +1480,7 @@
                                         <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareWYAxes}" Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1509,8 +1509,8 @@
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                             BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                            Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding TrendXAxes}" YAxes="{Binding WaitTimeTrendYAxes}"
+                                                            Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -1531,8 +1531,8 @@
                                     </StackPanel>
                                     <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
                                             BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
-                                        <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                            Margin="10"/>
+                                        <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding TrendXAxes}" YAxes="{Binding QueueLengthTrendYAxes}"
+                                                            Margin="10,10,10,16"/>
                                     </Border>
                                 </Grid>
                             </Border>
@@ -2127,12 +2127,55 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Mathematical Formulations Card -->
+                            <Border Background="{StaticResource CardGradient}"
+                                    CornerRadius="14" Padding="24,20" Margin="0,0,0,16"
+                                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="VERIFIED MATHEMATICAL FORMULAE &amp; MODELS" Style="{StaticResource HeadingSmall}" Margin="0,0,0,14"/>
+                                    
+                                    <!-- M/M/1 -->
+                                    <Border Background="#F0FDF4" CornerRadius="8" Padding="14" Margin="0,0,0,12" BorderThickness="1" BorderBrush="#86EFAC">
+                                        <StackPanel>
+                                            <TextBlock Text="1. M/M/1 Model (Exponential Arrivals &amp; Service)" FontWeight="Bold" Foreground="#15803D" FontSize="13"/>
+                                            <TextBlock Text="• Traffic Intensity (Utilization): ρ = λ / μ  (where ρ &lt; 1 for stability)" Style="{StaticResource BodyText}" Margin="0,4,0,2"/>
+                                            <TextBlock Text="• Avg Passengers in Queue: Lq = ρ² / (1 - ρ) = λ² / [μ(μ - λ)]" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Avg Passengers in System: L = ρ / (1 - ρ) = λ / (μ - λ)" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Avg Queue Wait Time: Wq = Lq / λ = ρ / [μ(1 - ρ)]" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Avg System Time: W = L / λ = 1 / [μ(1 - ρ)] = Wq + 1/μ" Style="{StaticResource BodyText}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- M/G/1 -->
+                                    <Border Background="#FEFCE8" CornerRadius="8" Padding="14" Margin="0,0,0,12" BorderThickness="1" BorderBrush="#FDE047">
+                                        <StackPanel>
+                                            <TextBlock Text="2. M/G/1 Model (Pollaczek-Khinchine Formula)" FontWeight="Bold" Foreground="#A16207" FontSize="13"/>
+                                            <TextBlock Text="• Service Variance: σs² = Cs² × (1/μ)²" Style="{StaticResource BodyText}" Margin="0,4,0,2"/>
+                                            <TextBlock Text="• Second Moment of Service: E[S²] = σs² + (1/μ)² = (1 + Cs²) / μ²" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• P-K Formula (Queue Wait): Wq = λ E[S²] / [2(1 - ρ)] = [(ρ / μ) / 2(1 - ρ)] × (1 + Cs²)" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Total System Time: W = Wq + 1/μ" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Queue Length &amp; System Size: Lq = λ Wq  |  L = λ W" Style="{StaticResource BodyText}"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- G/G/1 -->
+                                    <Border Background="#F5F3FF" CornerRadius="8" Padding="14" Margin="0,0,0,12" BorderThickness="1" BorderBrush="#C4B5FD">
+                                        <StackPanel>
+                                            <TextBlock Text="3. G/G/1 Model (Kingman's Heavy-Traffic Approximation)" FontWeight="Bold" Foreground="#6D28D9" FontSize="13"/>
+                                            <TextBlock Text="• Kingman Wait Approximation: Wq ≈ [ρ / (1 - ρ)] × [(Ca² + Cs²) / 2] × (1/μ)" Style="{StaticResource BodyText}" Margin="0,4,0,2"/>
+                                            <TextBlock Text="• Total System Time: W = Wq + 1/μ" Style="{StaticResource BodyText}" Margin="0,0,0,2"/>
+                                            <TextBlock Text="• Queue Length: Lq = λ Wq  |  L = λ W" Style="{StaticResource BodyText}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Terminologies -->
                             <Border Background="{StaticResource CardGradient}"
                                     CornerRadius="14" Padding="24,20" Margin="0,0,0,16"
                                     BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
                                 <StackPanel>
-                                    <TextBlock Text="QUEUEING THEORY TERMINOLOGIES &amp; FORMULAE" Style="{StaticResource HeadingSmall}" Margin="0,0,0,14"/>
+                                    <TextBlock Text="QUEUEING THEORY TERMINOLOGIES &amp; GLOSSARY" Style="{StaticResource HeadingSmall}" Margin="0,0,0,14"/>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -2140,23 +2183,26 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
                                             <TextBlock Text="λ (Lambda) — Arrival Rate" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="The average number of passengers arriving per minute." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
+                                            <TextBlock Text="The mean number of passenger arrivals per unit time." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
                                             
                                             <TextBlock Text="μ (Mu) — Service Rate" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="The average number of passengers served per minute by a single server." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
+                                            <TextBlock Text="The mean number of passengers served per unit time by a single server." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
                                             
-                                            <TextBlock Text="ρ (Rho) — Utilization (λ / μ)" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="Must be less than 1 for a stable queue." Style="{StaticResource BodyText}"/>
+                                            <TextBlock Text="ρ (Rho) — Utilization Factor" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Server occupancy ratio (λ / μ). System is stable if and only if ρ &lt; 1." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
+
+                                            <TextBlock Text="Ca &amp; Cs — Coefficients of Variation" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Ratio of standard deviation to mean for inter-arrival (Ca) and service times (Cs)." Style="{StaticResource BodyText}"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                            <TextBlock Text="Wq — Avg Queue Wait" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="Average time a passenger spends waiting in the queue before service starts." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
+                                            <TextBlock Text="Wq — Avg Queue Wait Time" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Average time spent waiting in queue before service begins." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
                                             
-                                            <TextBlock Text="W — Avg System Wait" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="Average total time a passenger spends in the system (Wq + 1/μ)." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
+                                            <TextBlock Text="W — Avg System Time (Turnaround)" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Total duration from arrival to completion (W = Wq + 1/μ)." Style="{StaticResource BodyText}" Margin="0,0,0,12"/>
                                             
-                                            <TextBlock Text="L / Lq — Lengths" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
-                                            <TextBlock Text="L is average passengers in system. Lq is average passengers in queue (Lq = λ × Wq)." Style="{StaticResource BodyText}"/>
+                                            <TextBlock Text="Little's Law (L = λW)" Style="{StaticResource HeadingMedium}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Fundamental law stating long-term average passengers equals arrival rate times system duration." Style="{StaticResource BodyText}"/>
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
