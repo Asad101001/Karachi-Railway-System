@@ -215,23 +215,25 @@ public class SimulationRunner
 
     private double SampleInterArrival()
     {
+        double rate = _params.ArrivalRate / 10.0;
         return _params.ModelType switch
         {
-            QueueModelType.MM1 => SampleExponential(_params.ArrivalRate),
-            QueueModelType.MG1 => SampleExponential(_params.ArrivalRate),
-            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / _params.ArrivalRate, _params.ArrivalCv),
-            _ => SampleExponential(_params.ArrivalRate),
+            QueueModelType.MM1 => SampleExponential(rate),
+            QueueModelType.MG1 => SampleExponential(rate),
+            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / rate, _params.ArrivalCv),
+            _ => SampleExponential(rate),
         };
     }
 
     private double SampleServiceTime()
     {
+        double rate = _params.ServiceRate / 10.0;
         return _params.ModelType switch
         {
-            QueueModelType.MM1 => SampleExponential(_params.ServiceRate),
-            QueueModelType.MG1 => SampleGammaByMeanAndCv(1.0 / _params.ServiceRate, _params.ServiceCv),
-            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / _params.ServiceRate, _params.ServiceCv),
-            _ => SampleExponential(_params.ServiceRate),
+            QueueModelType.MM1 => SampleExponential(rate),
+            QueueModelType.MG1 => SampleGammaByMeanAndCv(1.0 / rate, _params.ServiceCv),
+            QueueModelType.GG1 => SampleGammaByMeanAndCv(1.0 / rate, _params.ServiceCv),
+            _ => SampleExponential(rate),
         };
     }
 

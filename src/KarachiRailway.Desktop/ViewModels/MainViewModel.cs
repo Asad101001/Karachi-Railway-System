@@ -1167,7 +1167,7 @@ public sealed class MainViewModel : ViewModelBase
         var passengers = CompletedPassengers.ToList();
         int total = passengers.Count;
         const int ShowEach = 6;
-        double multiplier = 40.0;
+        double multiplier = 20.0;
 
         var shown = new List<(Passenger p, bool isEllipsis)>();
         int firstCount = Math.Min(ShowEach, total);

@@ -21,7 +21,7 @@ public static class QueueMetricsCalculator
         if (rho >= 1.0)
             return (rho, double.NaN, double.NaN, double.NaN, double.NaN);
 
-        double meanService = 1.0 / mu;
+        double meanService = 10.0 / mu;
 
         return modelType switch
         {

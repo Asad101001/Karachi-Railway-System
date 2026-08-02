@@ -1409,136 +1409,136 @@
                 <!-- ════════════════════════════════════════════════════════ -->
                 <!-- COMPARE TAB — Cross-model Comparisons                    -->
                 <!-- ════════════════════════════════════════════════════════ -->
-                <Grid Visibility="{Binding IsTabCompare, Converter={StaticResource BoolToVisibility}}">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Header -->
-                    <Border Grid.Row="0" Margin="10,10,10,6"
-                            Background="{StaticResource CardGradient}"
-                            CornerRadius="12" Padding="18,12"
-                            BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                        <StackPanel>
-                            <TextBlock Text="CROSS-MODEL COMPARISONS" Style="{StaticResource HeadingSmall}"/>
-                            <TextBlock Text="Analyze performance trends and compare Queue Models"
-                                       Style="{StaticResource KpiLabel}" Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Row 1: Model Comparison -->
-                    <UniformGrid Grid.Row="1" Margin="10,0,10,6" Columns="2" Rows="2">
-                        <!-- Compare Utilization -->
-                        <Border Margin="0,0,6,6" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="MODEL UTILIZATION (Rho)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-
-                        <!-- Compare L -->
-                        <Border Margin="6,0,0,6" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="MODEL NUMBER IN SYSTEM (L)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-
-                        <!-- Compare Wq -->
-                        <Border Margin="0,6,6,0" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="MODEL WAIT TIME (Wq)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-
-                        <!-- Compare W -->
-                        <Border Margin="6,6,0,0" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="MODEL SYSTEM TIME (W)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                    </UniformGrid>
-
-                    <!-- Row 2: Trend Over Time (Line Charts) -->
-                    <Grid Grid.Row="2" Margin="10,0,10,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Wait Time Trend -->
-                        <Border Grid.Column="0" Margin="0,0,6,0"
+                <!-- ════════════════════════════════════════════════════════ -->
+                <!-- COMPARE TAB — Cross-model Comparisons                    -->
+                <!-- ════════════════════════════════════════════════════════ -->
+                <ScrollViewer Visibility="{Binding IsTabCompare, Converter={StaticResource BoolToVisibility}}"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,0,0,20">
+                        <!-- Header -->
+                        <Border Margin="10,10,10,6"
                                 Background="{StaticResource CardGradient}"
-                                CornerRadius="12" Padding="16"
+                                CornerRadius="12" Padding="18,12"
                                 BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="WAIT TIME TREND (Wq)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
-                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                        Margin="10"/>
-                                </Border>
-                            </Grid>
+                            <StackPanel>
+                                <TextBlock Text="CROSS-MODEL COMPARISONS" Style="{StaticResource HeadingSmall}"/>
+                                <TextBlock Text="Analyze performance trends and compare Queue Models"
+                                           Style="{StaticResource KpiLabel}" Margin="0,4,0,0"/>
+                            </StackPanel>
                         </Border>
 
-                        <!-- Queue Length Trend -->
-                        <Border Grid.Column="1" Margin="6,0,0,0"
-                                Background="{StaticResource CardGradient}"
-                                CornerRadius="12" Padding="16"
-                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="QUEUE LENGTH TREND (Lq)" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
-                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
-                                    <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-                                                        Margin="10"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </Grid>
+                        <!-- Row 1: Model Comparison -->
+                        <UniformGrid Margin="10,0,10,6" Columns="2" Rows="2">
+                            <!-- Compare Utilization -->
+                            <Border Margin="0,0,6,6" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="MODEL UTILIZATION (Rho)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Compare L -->
+                            <Border Margin="6,0,0,6" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="MODEL NUMBER IN SYSTEM (L)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Compare Wq -->
+                            <Border Margin="0,6,6,0" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="MODEL WAIT TIME (Wq)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Compare W -->
+                            <Border Margin="6,6,0,0" Background="{StaticResource CardGradient}" CornerRadius="12" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="MODEL SYSTEM TIME (W)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </UniformGrid>
+
+                        <!-- Row 2: Trend Over Time (Line Charts) -->
+                        <Grid Margin="10,6,10,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Wait Time Trend -->
+                            <Border Grid.Column="0" Margin="0,0,6,0"
+                                    Background="{StaticResource CardGradient}"
+                                    CornerRadius="12" Padding="16"
+                                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="WAIT TIME TREND (Wq)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                            BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
+                                                            Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <!-- Queue Length Trend -->
+                            <Border Grid.Column="1" Margin="6,0,0,0"
+                                    Background="{StaticResource CardGradient}"
+                                    CornerRadius="12" Padding="16"
+                                    BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBlock Text="QUEUE LENGTH TREND (Lq)" Style="{StaticResource HeadingSmall}"/>
+                                        <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                            BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="250">
+                                        <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
+                                                            Margin="10"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
 
                 <!-- ════════════════════════════════════════════════════════ -->
                 <!-- REPORTS TAB — Run History Table                          -->
