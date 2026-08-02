@@ -1160,37 +1160,44 @@ public sealed class MainViewModel : ViewModelBase
 
         // Update Model Compare Charts
         // Update Model Compare Charts dynamically using current parameters
-        if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
-            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
-            ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
-            ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
+        try
         {
-            var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1;
-            var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1;
-            var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1;
-            
-            // For true comparison, if CVs are exactly 1.0 (which defaults to M/M/1), we temporarily alter them so the user sees a difference in the charts, 
-            // OR we just use the user's parameters. Using user's parameters is better, but if they are 1.0, M/M/1, M/G/1 and G/G/1 are identical.
-            
-            var r1 = new SimulationRunner(p1).Run();
-            var r2 = new SimulationRunner(p2).Run();
-            var r3 = new SimulationRunner(p3).Run();
+            if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
+                ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
+                ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
+                ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
+            {
+                var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1;
+                var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1;
+                var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1;
+                
+                // For true comparison, if CVs are exactly 1.0 (which defaults to M/M/1), we temporarily alter them so the user sees a difference in the charts, 
+                // OR we just use the user's parameters. Using user's parameters is better, but if they are 1.0, M/M/1, M/G/1 and G/G/1 are identical.
+                
+                var r1 = new SimulationRunner(p1).Run();
+                var r2 = new SimulationRunner(p2).Run();
+                var r3 = new SimulationRunner(p3).Run();
 
-            wqCompareVals[0] = r1.AvgQueueWaitTime;
-            wqCompareVals[1] = r2.AvgQueueWaitTime;
-            wqCompareVals[2] = r3.AvgQueueWaitTime;
+                wqCompareVals[0] = r1.AvgQueueWaitTime;
+                wqCompareVals[1] = r2.AvgQueueWaitTime;
+                wqCompareVals[2] = r3.AvgQueueWaitTime;
 
-            wCompareVals[0] = r1.AvgSystemTime;
-            wCompareVals[1] = r2.AvgSystemTime;
-            wCompareVals[2] = r3.AvgSystemTime;
-            
-            rhoCompareVals[0] = r1.Utilization;
-            rhoCompareVals[1] = r2.Utilization;
-            rhoCompareVals[2] = r3.Utilization;
-            
-            lCompareVals[0] = r1.AvgNumberInSystem;
-            lCompareVals[1] = r2.AvgNumberInSystem;
-            lCompareVals[2] = r3.AvgNumberInSystem;
+                wCompareVals[0] = r1.AvgSystemTime;
+                wCompareVals[1] = r2.AvgSystemTime;
+                wCompareVals[2] = r3.AvgSystemTime;
+                
+                rhoCompareVals[0] = r1.Utilization;
+                rhoCompareVals[1] = r2.Utilization;
+                rhoCompareVals[2] = r3.Utilization;
+                
+                lCompareVals[0] = r1.AvgNumberInSystem;
+                lCompareVals[1] = r2.AvgNumberInSystem;
+                lCompareVals[2] = r3.AvgNumberInSystem;
+            }
+        }
+        catch 
+        {
+            // Ignore exception during intermediate typing states (e.g. CV = 0)
         }
     }
 
