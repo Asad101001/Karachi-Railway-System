@@ -22,7 +22,7 @@ public enum SimulationState { Idle, Running, Paused, Completed }
 /// <summary>
 /// Main view model for the Karachi Railway Simulation desktop application.
 /// </summary>
-public sealed class MainViewModel : ViewModelBase
+public sealed class MainViewModel : ViewModelBase, IDisposable
 {
     private SimulationRunner?        _runner;
     private CancellationTokenSource? _cts;
@@ -30,6 +30,8 @@ public sealed class MainViewModel : ViewModelBase
     private SimulationResult?        _result;
     private Passenger?               _selectedPassenger;
     private bool                     _isCustomerModalOpen;
+    private int                      _runGeneration;
+    private bool                     _disposed;
 
     private readonly PlaybackController _playback = new();
     private readonly Dictionary<int, string>                   _passengerCurrentNodes = new();
@@ -80,26 +82,6 @@ public sealed class MainViewModel : ViewModelBase
     }
 
     private readonly Dictionary<QueueModelType, SimulationResult> _modelResults = new();
-
-    private async Task RunInitialComparisonAsync()
-    {
-        try
-        {
-            var mainParams = BuildParameters();
-            _runner = new SimulationRunner(mainParams);
-            var result = await Task.Run(() => _runner.Run());
-            _result = result;
-
-            _modelResults[result.ModelType] = result;
-
-            ApplyResult(result);
-            BuildModellingTable(result);
-            BuildGanttChart();
-
-            UpdateCompareCharts();
-        }
-        catch { }
-    }
 
     public SimulationState State
     {
@@ -848,10 +830,11 @@ public sealed class MainViewModel : ViewModelBase
             return;
         }
 
-        _cts?.Cancel();
-        _playback.Pause();
+        var generation = Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
 
-        _cts    = new CancellationTokenSource();
+        var runCts = new CancellationTokenSource();
+        _cts    = runCts;
         _runner = new SimulationRunner(BuildParameters());
 
         PassengerLog.Clear();
@@ -867,7 +850,9 @@ public sealed class MainViewModel : ViewModelBase
 
         try
         {
-            var (result, events) = await _runner.RunForPlaybackAsync(cancellationToken: _cts.Token);
+            var (result, events) = await _runner.RunForPlaybackAsync(cancellationToken: runCts.Token);
+            if (generation != _runGeneration || runCts.IsCancellationRequested)
+                return;
 
             _result       = result;
             PlaybackTotal = Math.Max(1, events.Count);
@@ -888,7 +873,9 @@ public sealed class MainViewModel : ViewModelBase
             BuildGanttChart();
             UpdateCompareCharts();
 
-            await RunInitialComparisonAsync(result);
+            await RunInitialComparisonAsync(result, generation, runCts.Token);
+            if (generation != _runGeneration || runCts.IsCancellationRequested)
+                return;
 
             if (TraceModeEnabled)
             {
@@ -906,17 +893,29 @@ public sealed class MainViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            PlainSummary = "Simulation stopped by user.";
-            State = SimulationState.Idle;
+            if (generation == _runGeneration)
+            {
+                PlainSummary = "Simulation stopped by user.";
+                State = SimulationState.Idle;
+            }
         }
         catch (Exception ex)
         {
-            PlainSummary = $"Error: {ex.Message}";
-            State = SimulationState.Idle;
+            if (generation == _runGeneration)
+            {
+                PlainSummary = $"Error: {ex.Message}";
+                State = SimulationState.Idle;
+            }
+        }
+        finally
+        {
+            if (ReferenceEquals(_cts, runCts))
+                _cts = null;
+            runCts.Dispose();
         }
     }
 
-    private async Task RunInitialComparisonAsync(SimulationResult mainResult)
+    private async Task RunInitialComparisonAsync(SimulationResult mainResult, int generation, CancellationToken cancellationToken)
     {
         var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1; p1.ServiceCv = 1.0; p1.ArrivalCv = 1.0;
         var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1; p2.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p2.ArrivalCv = 1.0;
@@ -924,11 +923,15 @@ public sealed class MainViewModel : ViewModelBase
 
         var (r1, r2, r3) = await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var s1 = mainResult.ModelType == QueueModelType.MM1 ? mainResult : new SimulationRunner(p1).Run();
             var s2 = mainResult.ModelType == QueueModelType.MG1 ? mainResult : new SimulationRunner(p2).Run();
             var s3 = mainResult.ModelType == QueueModelType.GG1 ? mainResult : new SimulationRunner(p3).Run();
+            cancellationToken.ThrowIfCancellationRequested();
             return (s1, s2, s3);
-        });
+        }, cancellationToken);
+
+        if (generation != _runGeneration || cancellationToken.IsCancellationRequested) return;
 
         _modelResults[QueueModelType.MM1] = r1;
         _modelResults[QueueModelType.MG1] = r2;
@@ -972,11 +975,19 @@ public sealed class MainViewModel : ViewModelBase
 
     private void StopSimulation()
     {
-        _cts?.Cancel();
-        _playback.Pause();
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
         State = SimulationState.Idle;
         PlainSummary = "Stopped.";
         CommandManager.InvalidateRequerySuggested();
+    }
+
+
+    private void CancelCurrentRun()
+    {
+        _cts?.Cancel();
+        _cts = null;
+        _playback.Pause();
     }
 
     private void SelectModel(object? parameter)
@@ -991,10 +1002,10 @@ public sealed class MainViewModel : ViewModelBase
 
     private void Reset()
     {
-        _cts?.Cancel();
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
         _playback.Reset();
         _runner = null;
-        _cts    = null;
         _result = null;
         _modelResults.Clear();
         ResetFlowDiagram();
@@ -1031,8 +1042,8 @@ public sealed class MainViewModel : ViewModelBase
             oldNode.LeavePassenger(evt.PassengerId);
         }
 
-        if (_nodeMap.TryGetValue(newNodeId, out var newNode))
-            newNode.EnterPassenger(evt.PassengerId);
+        _nodeMap.TryGetValue(newNodeId, out var newNode);
+        newNode?.EnterPassenger(evt.PassengerId);
 
         _passengerCurrentNodes[evt.PassengerId] = newNodeId;
 
@@ -1063,7 +1074,7 @@ public sealed class MainViewModel : ViewModelBase
         }
 
         SimCurrentTime   = evt.SimTime;
-        PlaybackProgress = _playback.EventsDone;
+        PlaybackProgress = _playback.CurrentEventNumber;
         CommandManager.InvalidateRequerySuggested();
     }
 
@@ -1071,6 +1082,8 @@ public sealed class MainViewModel : ViewModelBase
     {
         foreach (var n in FlowNodes)
             n.ClearPassengers();
+        PassengerTokens.Clear();
+        _tokenMap.Clear();
         _passengerCurrentNodes.Clear();
 
         if (_result != null)
@@ -1686,6 +1699,18 @@ public sealed class MainViewModel : ViewModelBase
         PassengerStep.Completed              => "DONE",
         _                                    => step.ToString(),
     };
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        Interlocked.Increment(ref _runGeneration);
+        CancelCurrentRun();
+        _playback.EventApplied -= OnEventApplied;
+        _playback.PlaybackCompleted -= OnPlaybackCompleted;
+        _playback.Dispose();
+    }
 }
 
 /// <summary>Playback speed option for the speed ComboBox.</summary>
