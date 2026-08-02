@@ -140,6 +140,13 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsGG1));
                 OnPropertyChanged(nameof(QueueModelHeaderText));
                 
+                if (value == QueueModelType.MG1 && ServiceCv == 1.0) ServiceCv = 0.5;
+                if (value == QueueModelType.GG1)
+                {
+                    if (ServiceCv == 1.0) ServiceCv = 0.5;
+                    if (ArrivalCv == 1.0) ArrivalCv = 0.5;
+                }
+                
                 // Update table with dummy data to preview model behavior
                 if (ModellingRows.Count > 0)
                 {
@@ -382,23 +389,53 @@ public sealed class MainViewModel : ViewModelBase
 
     public ISeries[] ModelCompareWqSeries { get; } = new ISeries[]
     {
-        new ColumnSeries<double>
+        new LineSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "Wait Time (Wq)",
-            Fill = new SolidColorPaint(SKColors.Gold),
-            MaxBarWidth = 40
+            Fill = null,
+            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
+            GeometrySize = 10,
+            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
         }
     };
 
     public ISeries[] ModelCompareWSeries { get; } = new ISeries[]
     {
-        new ColumnSeries<double>
+        new LineSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "System Time (W)",
-            Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
-            MaxBarWidth = 40
+            Fill = null,
+            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
+            GeometrySize = 10,
+            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] ModelCompareUtilizationSeries { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Utilization (Rho)",
+            Fill = null,
+            Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 3 },
+            GeometrySize = 10,
+            GeometryStroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 2 }
+        }
+    };
+
+    public ISeries[] ModelCompareLSeries { get; } = new ISeries[]
+    {
+        new LineSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Number in System (L)",
+            Fill = null,
+            Stroke = new SolidColorPaint(SKColors.Tomato) { StrokeThickness = 3 },
+            GeometrySize = 10,
+            GeometryStroke = new SolidColorPaint(SKColors.Tomato) { StrokeThickness = 2 }
         }
     };
 
@@ -1010,43 +1047,60 @@ public sealed class MainViewModel : ViewModelBase
 
         var passengers = CompletedPassengers.ToList();
         int total = passengers.Count;
-        const int ShowEach = 5;
+        const int ShowEach = 6;
+        double multiplier = 12.0;
 
         var shown = new List<(Passenger p, bool isEllipsis)>();
         int firstCount = Math.Min(ShowEach, total);
         for (int i = 0; i < firstCount; i++) shown.Add((passengers[i], false));
 
         if (total > ShowEach * 2)
-            shown.Add((passengers[0], true)); // ellipsis marker
+            shown.Add((passengers[0], true));
 
         int lastStart = Math.Max(firstCount, total - ShowEach);
         for (int i = lastStart; i < total; i++) shown.Add((passengers[i], false));
 
-        int row = 0;
-        foreach (var (p, isEllipsis) in shown)
+        double lastServiceEnd = 0;
+        bool isFirstAfterEllipsis = false;
+
+        for (int i = 0; i < shown.Count; i++)
         {
+            var (p, isEllipsis) = shown[i];
+
             if (isEllipsis)
             {
-                GanttItems.Add(new GanttItem { IsEllipsis = true, Row = row++ });
+                GanttItems.Add(new GanttItem 
+                { 
+                    IsEllipsis = true, 
+                    IsNotEllipsis = false,
+                    WidthPos = 40,
+                    BlockMargin = new Thickness(15, 0, 15, 0)
+                });
+                isFirstAfterEllipsis = true;
                 continue;
             }
 
-            double arrivalTime  = p.ArrivalTime;
-            double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : arrivalTime;
-            double serviceEnd   = p.ExitTime   > 0 ? p.ExitTime   : serviceStart;
-
+            double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : p.ArrivalTime;
+            double serviceEnd   = p.ExitTime > 0 ? p.ExitTime : serviceStart;
+            double svcDuration  = Math.Max(0, serviceEnd - serviceStart);
+            
+            double gap = serviceStart - lastServiceEnd;
+            if (gap < 0 || i == 0 || isFirstAfterEllipsis) gap = 0;
+            
             GanttItems.Add(new GanttItem
             {
-                Row          = row++,
-                PassengerId  = p.Id,
-                ArrivalTime  = arrivalTime,
-                WaitStart    = arrivalTime,
-                ServiceStart = serviceStart,
-                ServiceEnd   = serviceEnd,
-                WaitDuration = Math.Max(0, serviceStart - arrivalTime),
-                SvcDuration  = Math.Max(0, serviceEnd - serviceStart),
-                IsEllipsis   = false,
+                Label = $"C{p.Id}",
+                WidthPos = Math.Max(20, svcDuration * multiplier),
+                BlockMargin = new Thickness(gap * multiplier, 0, 0, 0),
+                StartTimeLabel = serviceStart.ToString("F0"),
+                EndTimeLabel = serviceEnd.ToString("F0"),
+                ShowStartTime = i == 0 || isFirstAfterEllipsis || gap > 0.1,
+                IsEllipsis = false,
+                IsNotEllipsis = true
             });
+
+            lastServiceEnd = serviceEnd;
+            isFirstAfterEllipsis = false;
         }
     }
 
@@ -1105,20 +1159,38 @@ public sealed class MainViewModel : ViewModelBase
         }
 
         // Update Model Compare Charts
+        // Update Model Compare Charts dynamically using current parameters
         if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
-            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals)
+            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
+            ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
+            ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
         {
-            var mm1Run = RunHistory.FirstOrDefault(r => r.ModelName == "M/M/1");
-            var mg1Run = RunHistory.FirstOrDefault(r => r.ModelName == "M/G/1");
-            var gg1Run = RunHistory.FirstOrDefault(r => r.ModelName == "G/G/1");
+            var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1;
+            var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1;
+            var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1;
+            
+            // For true comparison, if CVs are exactly 1.0 (which defaults to M/M/1), we temporarily alter them so the user sees a difference in the charts, 
+            // OR we just use the user's parameters. Using user's parameters is better, but if they are 1.0, M/M/1, M/G/1 and G/G/1 are identical.
+            
+            var r1 = new SimulationRunner(p1).Run();
+            var r2 = new SimulationRunner(p2).Run();
+            var r3 = new SimulationRunner(p3).Run();
 
-            wqCompareVals[0] = mm1Run?.Wq ?? 0;
-            wqCompareVals[1] = mg1Run?.Wq ?? 0;
-            wqCompareVals[2] = gg1Run?.Wq ?? 0;
+            wqCompareVals[0] = r1.AvgQueueWaitTime;
+            wqCompareVals[1] = r2.AvgQueueWaitTime;
+            wqCompareVals[2] = r3.AvgQueueWaitTime;
 
-            wCompareVals[0] = mm1Run?.W ?? 0;
-            wCompareVals[1] = mg1Run?.W ?? 0;
-            wCompareVals[2] = gg1Run?.W ?? 0;
+            wCompareVals[0] = r1.AvgSystemTime;
+            wCompareVals[1] = r2.AvgSystemTime;
+            wCompareVals[2] = r3.AvgSystemTime;
+            
+            rhoCompareVals[0] = r1.Utilization;
+            rhoCompareVals[1] = r2.Utilization;
+            rhoCompareVals[2] = r3.Utilization;
+            
+            lCompareVals[0] = r1.AvgNumberInSystem;
+            lCompareVals[1] = r2.AvgNumberInSystem;
+            lCompareVals[2] = r3.AvgNumberInSystem;
         }
     }
 
@@ -1376,13 +1448,12 @@ public record SpeedOption(string Label, double Value)
 /// <summary>Represents an item in the Gantt chart.</summary>
 public class GanttItem
 {
-    public int Row { get; set; }
-    public int PassengerId { get; set; }
-    public double ArrivalTime { get; set; }
-    public double WaitStart { get; set; }
-    public double ServiceStart { get; set; }
-    public double ServiceEnd { get; set; }
-    public double WaitDuration { get; set; }
-    public double SvcDuration { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public double WidthPos { get; set; }
+    public Thickness BlockMargin { get; set; }
+    public string StartTimeLabel { get; set; } = string.Empty;
+    public string EndTimeLabel { get; set; } = string.Empty;
+    public bool ShowStartTime { get; set; }
     public bool IsEllipsis { get; set; }
+    public bool IsNotEllipsis { get; set; }
 }
