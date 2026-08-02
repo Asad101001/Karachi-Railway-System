@@ -1127,7 +1127,7 @@ public sealed class MainViewModel : ViewModelBase
 
         if (result != null && result.Passengers != null && result.Passengers.Count > 0)
         {
-            var passengers = result.Passengers.Take(30).ToList();
+            var passengers = result.Passengers.ToList();
             int count = passengers.Count;
 
             double totalWait = 0;
