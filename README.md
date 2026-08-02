@@ -33,13 +33,13 @@ The application supports three single-server queue models (M/M/1, M/G/1, G/G/1) 
 You can launch the application directly using the .NET CLI:
 
 ```bash
-dotnet build KarachiRailwaySystem.slnx
+dotnet build KarachiRailwaySystem.sln
 dotnet run --project src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj -c Debug
 ```
 
 To run unit tests:
 ```bash
-dotnet test KarachiRailwaySystem.slnx -c Debug
+dotnet test KarachiRailwaySystem.sln -c Debug
 ```
 
 ---
@@ -84,6 +84,7 @@ dotnet publish src/KarachiRailway.Desktop/KarachiRailway.Desktop.csproj `
 ## Project Structure
 
 ```
+KarachiRailwaySystem.sln
 KarachiRailwaySystem.slnx
 ├── src/
 │   ├── KarachiRailway.Simulation/    # Core queue mathematics and logic
