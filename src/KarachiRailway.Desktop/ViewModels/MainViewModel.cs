@@ -93,6 +93,7 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsRunning));
                 OnPropertyChanged(nameof(IsPaused));
                 OnPropertyChanged(nameof(IsCompleted));
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
                 OnPropertyChanged(nameof(StatusLabel));
                 OnPropertyChanged(nameof(StatusColor));
                 OnPropertyChanged(nameof(CanEditParams));
@@ -337,7 +338,23 @@ public sealed class MainViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _selectedSpeed, value) && value != null)
+            {
                 _playback.SpeedMultiplier = value.Value;
+                PlaybackSpeed = value.Value;
+            }
+        }
+    }
+
+    private double _playbackSpeed = 1.0;
+    public double PlaybackSpeed
+    {
+        get => _playbackSpeed;
+        set
+        {
+            if (SetProperty(ref _playbackSpeed, value))
+            {
+                _playback.SpeedMultiplier = value;
+            }
         }
     }
 

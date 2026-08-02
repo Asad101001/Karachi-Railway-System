@@ -16,7 +16,8 @@ The application supports three single-server queue models (M/M/1, M/G/1, G/G/1) 
   - **⚙ Settings**: Expanded parameters configuration and playback controls.
   - **ℹ About**: University / Department branding and model description.
 - **Live Performance KPIs**: Quick-glance KPI strip providing metrics like Utilization ($\rho$), Wait times ($W_q, W$), Queue Lengths ($L_q, L$), and System Throughput.
-- **Playback Controls**: Refined simulation playback with Play, Pause, Step-through, Stop, and Speed controls (0.25x to 2x).
+- **Playback Controls & Speed Slider**: Refined simulation playback with Play, Pause, Step-through, Stop, Reset and a real-time adjustable speed slider (`0.1x` to `3x`).
+- **Comprehensive Terminologies**: The About page now features detailed Queueing Theory Terminologies, Formulae, and Developer credits.
 
 ---
 
