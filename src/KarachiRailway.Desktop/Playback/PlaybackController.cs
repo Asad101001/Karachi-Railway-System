@@ -117,7 +117,8 @@ public sealed class PlaybackController
 
         if (elapsedSeconds <= 0) return;
 
-        _playbackTime += elapsedSeconds * _speedMultiplier;
+        // Advance simulated time in minutes (at 1x speed, 1 real second = 0.6 simulated minutes)
+        _playbackTime += elapsedSeconds * _speedMultiplier * 0.6;
 
         while (_nextIndex < _events.Count &&
                _events[_nextIndex].SimTime <= _playbackTime)

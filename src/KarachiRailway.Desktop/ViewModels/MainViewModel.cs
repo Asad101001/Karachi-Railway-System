@@ -55,13 +55,11 @@ public sealed class MainViewModel : ViewModelBase
         _selectedSpeed = SpeedOptions[2];
 
         StartCommand  = new AsyncRelayCommand(StartSimulationAsync);
-        PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running);
-        ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused);
-          StepCommand   = new RelayCommand(StepForwardPlayback,
-                        () => State is SimulationState.Running or SimulationState.Paused &&
-                            _playback.EventsDone < _playback.EventsTotal);
-        StopCommand   = new RelayCommand(StopSimulation, () => State != SimulationState.Idle);
-        ResetCommand  = new RelayCommand(Reset,          () => State != SimulationState.Idle);
+        PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running || _playback.IsPlaying);
+        ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused || !_playback.IsPlaying);
+        StepCommand   = new RelayCommand(StepForwardPlayback, () => _playback.EventsTotal > 0 && _playback.EventsDone < _playback.EventsTotal);
+        StopCommand   = new RelayCommand(StopSimulation);
+        ResetCommand  = new RelayCommand(Reset);
 
         ToggleLeftPanelCommand  = new RelayCommand(() => ShowLeftPanel = !ShowLeftPanel);
         ToggleRightPanelCommand = new RelayCommand(() => ShowRightPanel = !ShowRightPanel);
@@ -902,7 +900,7 @@ public sealed class MainViewModel : ViewModelBase
             }
 
             _playback.Load(events);
-            _playback.SpeedMultiplier = SelectedSpeed.Value;
+            _playback.SpeedMultiplier = PlaybackSpeed;
             _playback.Start();
             PlainSummary = $"Simulation complete ({result.Passengers.Count} passengers). Animating flow...";
         }
@@ -943,30 +941,33 @@ public sealed class MainViewModel : ViewModelBase
     {
         _playback.Pause();
         State = SimulationState.Paused;
-        PlainSummary = "Playback paused. Click Resume to continue.";
+        PlainSummary = "Playback paused. Click Resume or Next Step to continue.";
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void ResumePlayback()
     {
-        _playback.SpeedMultiplier = SelectedSpeed.Value;
+        _playback.SpeedMultiplier = PlaybackSpeed;
         _playback.Resume();
         State = SimulationState.Running;
         PlainSummary = "Playback running...";
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void StepForwardPlayback()
     {
-        if (State == SimulationState.Running)
-            _playback.Pause();
+        _playback.Pause();
 
         if (_playback.StepForward())
         {
-            if (State != SimulationState.Completed)
-                State = SimulationState.Paused;
-
-            PlainSummary = "Advanced one step.";
-            CommandManager.InvalidateRequerySuggested();
+            State = SimulationState.Paused;
+            PlainSummary = $"Step {_playback.EventsDone}/{_playback.EventsTotal} applied.";
         }
+        else
+        {
+            PlainSummary = "End of simulation events reached.";
+        }
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void StopSimulation()
@@ -996,6 +997,7 @@ public sealed class MainViewModel : ViewModelBase
         _cts    = null;
         _result = null;
         _modelResults.Clear();
+        ResetFlowDiagram();
         State   = SimulationState.Idle;
 
         KpiRho = KpiWq = KpiW = KpiLq = KpiL = 0;
@@ -1006,11 +1008,15 @@ public sealed class MainViewModel : ViewModelBase
         PlaybackProgress = 0;
         PlaybackTotal    = 1;
 
+        ModellingRows.Clear();
+        CompletedPassengers.Clear();
+        GanttItems.Clear();
+        UpdateCompareCharts();
+
         PassengerLog.Clear();
         TraceOutput     = string.Empty;
-        ValidationError = string.Empty;
-        PlainSummary    = "Parameters reset. Configure and click Simulate to run again.";
-        ResetFlowDiagram();
+
+        PlainSummary = "Reset complete. Configure parameters and click Simulate to run.";
         CommandManager.InvalidateRequerySuggested();
     }
 
