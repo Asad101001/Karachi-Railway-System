@@ -13,7 +13,7 @@ using SkiaSharp;
 namespace KarachiRailway.Desktop.ViewModels;
 
 /// <summary>Navigation tabs for the sidebar.</summary>
-public enum AppTab { Home, Model, Metrics, Reports, Settings, About }
+public enum AppTab { Home, Model, Metrics, Compare, Reports, Settings, About }
 
 public enum SimulationState { Idle, Running, Paused, Completed }
 
@@ -93,7 +93,7 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsRunning));
                 OnPropertyChanged(nameof(IsPaused));
                 OnPropertyChanged(nameof(IsCompleted));
-                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+                Application.Current.Dispatcher.Invoke(() => System.Windows.Input.CommandManager.InvalidateRequerySuggested());
                 OnPropertyChanged(nameof(StatusLabel));
                 OnPropertyChanged(nameof(StatusColor));
                 OnPropertyChanged(nameof(CanEditParams));
@@ -251,6 +251,7 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsTabHome));
                 OnPropertyChanged(nameof(IsTabModel));
                 OnPropertyChanged(nameof(IsTabMetrics));
+                OnPropertyChanged(nameof(IsTabCompare));
                 OnPropertyChanged(nameof(IsTabReports));
                 OnPropertyChanged(nameof(IsTabSettings));
                 OnPropertyChanged(nameof(IsTabAbout));
@@ -260,6 +261,7 @@ public sealed class MainViewModel : ViewModelBase
     public bool IsTabHome     => ActiveTab == AppTab.Home;
     public bool IsTabModel    => ActiveTab == AppTab.Model;
     public bool IsTabMetrics  => ActiveTab == AppTab.Metrics;
+    public bool IsTabCompare  => ActiveTab == AppTab.Compare;
     public bool IsTabReports  => ActiveTab == AppTab.Reports;
     public bool IsTabSettings => ActiveTab == AppTab.Settings;
     public bool IsTabAbout    => ActiveTab == AppTab.About;
@@ -301,7 +303,14 @@ public sealed class MainViewModel : ViewModelBase
         set => SetProperty(ref _isCustomerModalOpen, value);
     }
 
-    // ── Metrics chart data (Metrics tab) ─────────────────────────────────────
+    private string _runNarrative = "Run a simulation to generate a report.";
+    public string RunNarrative
+    {
+        get => _runNarrative;
+        private set => SetProperty(ref _runNarrative, value);
+    }
+
+    // ── Metrics chart data (Compare tab & Metrics tab) ────────────────────────
     public ISeries[] WaitTimeTrend { get; } = new ISeries[]
     {
         new LineSeries<double>
@@ -326,6 +335,65 @@ public sealed class MainViewModel : ViewModelBase
             GeometrySize = 6,
             GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
         }
+    };
+
+    public ISeries[] CurrentRunWaitTimes { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Wait Time",
+            Fill = new SolidColorPaint(SKColors.MediumSeaGreen)
+        }
+    };
+
+    public ISeries[] CurrentRunTurnaroundTimes { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double>(),
+            Name = "Turnaround Time",
+            Fill = new SolidColorPaint(SKColors.Gold)
+        }
+    };
+
+    public ISeries[] KpiRhoSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiWqSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiWSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+    public ISeries[] KpiLSeries { get; } = new ISeries[] { new LineSeries<double> { Values = new ObservableCollection<double>(), Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 2 }, Fill = null, GeometrySize = 0 } };
+
+    public Axis[] SparklineXAxes { get; } = new Axis[] { new Axis { IsVisible = false } };
+    public Axis[] SparklineYAxes { get; } = new Axis[] { new Axis { IsVisible = false } };
+
+    public ISeries[] ModelCompareWqSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "Wait Time (Wq)",
+            Fill = new SolidColorPaint(SKColors.Gold),
+            MaxBarWidth = 40
+        }
+    };
+
+    public ISeries[] ModelCompareWSeries { get; } = new ISeries[]
+    {
+        new ColumnSeries<double>
+        {
+            Values = new ObservableCollection<double> { 0, 0, 0 },
+            Name = "System Time (W)",
+            Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
+            MaxBarWidth = 40
+        }
+    };
+
+    public Axis[] ModelCompareXAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Labels = new ObservableCollection<string> { "M/M/1", "M/G/1", "G/G/1" },
+            LabelsRotation = 0
+        } 
     };
 
     public Axis[] XAxes { get; } = new Axis[] { new Axis { Labels = new ObservableCollection<string>() } };
@@ -402,14 +470,14 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
-    private double _serviceCv = 1.0;
+    private double _serviceCv = 1.5;
     public double ServiceCv
     {
         get => _serviceCv;
         set => SetProperty(ref _serviceCv, value);
     }
 
-    private double _arrivalCv = 1.0;
+    private double _arrivalCv = 0.8;
     public double ArrivalCv
     {
         get => _arrivalCv;
@@ -751,6 +819,7 @@ public sealed class MainViewModel : ViewModelBase
         if (_result != null)
         {
             PlainSummary = BuildPlainSummary(_result);
+            RunNarrative = BuildNarrative(_result);
         }
 
         State = SimulationState.Completed;
@@ -883,14 +952,64 @@ public sealed class MainViewModel : ViewModelBase
             labels.Clear();
 
             // Show last 10 runs for trend
-            var runs = RunHistory.Reverse().Take(10).Reverse().ToList();
-            
-            foreach (var r in runs)
+            var latest = RunHistory.Take(10).Reverse().ToList();
+            foreach (var run in latest)
             {
-                waitValues.Add(r.Wq);
-                queueValues.Add(r.Lq);
-                labels.Add($"Run {r.RunNumber}");
+                waitValues.Add(run.Wq);
+                queueValues.Add(run.Lq);
+                labels.Add($"Run {run.RunNumber}");
             }
+        }
+
+        // Update KPI Sparklines with last 20 runs trend
+        if (KpiRhoSeries[0].Values is ObservableCollection<double> rhoVals &&
+            KpiWqSeries[0].Values is ObservableCollection<double> wqVals &&
+            KpiWSeries[0].Values is ObservableCollection<double> wVals &&
+            KpiLSeries[0].Values is ObservableCollection<double> lVals)
+        {
+            rhoVals.Clear();
+            wqVals.Clear();
+            wVals.Clear();
+            lVals.Clear();
+            
+            var sparklineHistory = RunHistory.Take(20).Reverse().ToList();
+            foreach (var run in sparklineHistory)
+            {
+                rhoVals.Add(run.Rho);
+                wqVals.Add(run.Wq);
+                wVals.Add(run.W);
+                lVals.Add(run.L);
+            }
+        }
+
+        if (_result != null &&
+            CurrentRunWaitTimes[0].Values is ObservableCollection<double> currentWait &&
+            CurrentRunTurnaroundTimes[0].Values is ObservableCollection<double> currentTurnaround)
+        {
+            currentWait.Clear();
+            currentTurnaround.Clear();
+            foreach (var p in _result.Passengers.Where(x => x.Completed))
+            {
+                currentWait.Add(p.WaitTime);
+                currentTurnaround.Add(p.SystemTime);
+            }
+        }
+
+        // Update Model Compare Charts
+        if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
+            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals)
+        {
+            var mm1Run = RunHistory.FirstOrDefault(r => r.ModelName == "M/M/1");
+            var mg1Run = RunHistory.FirstOrDefault(r => r.ModelName == "M/G/1");
+            var gg1Run = RunHistory.FirstOrDefault(r => r.ModelName == "G/G/1");
+
+            wqCompareVals[0] = mm1Run?.Wq ?? 0;
+            wqCompareVals[1] = mg1Run?.Wq ?? 0;
+            wqCompareVals[2] = gg1Run?.Wq ?? 0;
+
+            wCompareVals[0] = mm1Run?.W ?? 0;
+            wCompareVals[1] = mg1Run?.W ?? 0;
+            wCompareVals[2] = gg1Run?.W ?? 0;
         }
     }
 
@@ -1107,6 +1226,13 @@ public sealed class MainViewModel : ViewModelBase
         return $"{u}\nAvg queue wait: {r.AvgQueueWaitTime:F2} min  System time: {r.AvgSystemTime:F2} min\n" +
                $"{r.TotalArrived} arrived, {r.TotalCompleted} boarded ({r.CompletionRate:F1}%), " +
                $"{r.TotalLeft} left.  Throughput: {r.Throughput:F2} pax/min";
+    }
+
+    private static string BuildNarrative(SimulationResult r)
+    {
+        bool stable = r.Utilization < 1.0;
+        string status = stable ? "busy but stable" : "unstable and overloaded";
+        return $"In this simulation run, {r.TotalArrived} passengers arrived into the system. The server was utilized {r.Utilization:P0} of the time, indicating a {status} environment. On average, passengers waited {r.AvgQueueWaitTime:F2} minutes in the queue and spent {r.AvgSystemTime:F2} minutes in the system entirely. A total of {r.TotalCompleted} passengers successfully completed their journey ({r.CompletionRate:F1}% completion rate), while {r.TotalLeft} left due to balking or reneging. The system achieved a throughput of {r.Throughput:F2} passengers per minute.";
     }
 
     private static string StepLabel(PassengerStep step) => step switch

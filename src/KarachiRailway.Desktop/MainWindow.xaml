@@ -223,6 +223,21 @@
                         📈
                     </Button>
 
+                    <!-- Compare -->
+                    <Button Tag="Compare" Command="{Binding NavigateCommand}" CommandParameter="Compare">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SideNavButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsTabCompare}" Value="True">
+                                        <Setter Property="Template" Value="{StaticResource SideNavActiveTemplate}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        📊
+                    </Button>
+
+
                     <!-- Reports -->
                     <Button Tag="Reports" Command="{Binding NavigateCommand}" CommandParameter="Reports">
                         <Button.Style>
@@ -816,6 +831,25 @@
                                     <TextBox Grid.Column="1" Text="{Binding DurationMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
                                 </Grid>
 
+                                <Grid Margin="0,0,0,8"
+                                      Visibility="{Binding IsMM1, Converter={StaticResource InverseBoolToVisibility}}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Grid.Column="0" Text="Service CV (Cs)" Style="{StaticResource ParamLabel}"/>
+                                        <TextBlock FontSize="9" Foreground="{StaticResource TextMutedBrush}" Text="Variability of service time"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" Text="{Binding ServiceCv, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,8"
+                                      Visibility="{Binding IsGG1, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Grid.Column="0" Text="Arrival CV (Ca)" Style="{StaticResource ParamLabel}"/>
+                                        <TextBlock FontSize="9" Foreground="{StaticResource TextMutedBrush}" Text="Variability of inter-arrival"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" Text="{Binding ArrivalCv, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
+                                </Grid>
+
                                 <!-- Validation error -->
                                 <Border CornerRadius="7" Padding="10,7" Margin="0,4,0,0"
                                         Background="#2D1010" BorderThickness="1" BorderBrush="#5A1B1B"
@@ -867,6 +901,25 @@
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" Text="Duration (mins)" Style="{StaticResource ParamLabel}"/>
                                     <TextBox Grid.Column="1" Text="{Binding DurationMinutes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8"
+                                      Visibility="{Binding IsMM1, Converter={StaticResource InverseBoolToVisibility}}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Service CV (Cs)" Style="{StaticResource ParamLabel}"/>
+                                        <TextBlock FontSize="9" Foreground="{StaticResource TextMutedBrush}" Text="Variability of service time"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" Text="{Binding ServiceCv, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,8"
+                                      Visibility="{Binding IsGG1, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="80"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Arrival CV (Ca)" Style="{StaticResource ParamLabel}"/>
+                                        <TextBlock FontSize="9" Foreground="{StaticResource TextMutedBrush}" Text="Variability of inter-arrival"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" Text="{Binding ArrivalCv, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ParamTextBox}" IsEnabled="{Binding CanEditParams}"/>
                                 </Grid>
 
                                 <Separator Style="{StaticResource HSep}"/>
@@ -1054,7 +1107,7 @@
                                            FontFamily="Segoe UI" FontSize="16" FontWeight="Bold"
                                            Foreground="{StaticResource AccentRedBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
-                            <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+<StackPanel Grid.Column="2" HorizontalAlignment="Center">
                                 <TextBlock Text="AVG TURNAROUND" Style="{StaticResource HeadingSmall}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="{Binding ModellingAvgTurnaround, StringFormat={}{0:F3} min}"
                                            FontFamily="Segoe UI" FontSize="16" FontWeight="Bold"
@@ -1072,7 +1125,7 @@
                 </Grid>
 
                 <!-- ════════════════════════════════════════════════════════ -->
-                <!-- METRICS TAB — Charts                                     -->
+                <!-- METRICS TAB — Individual Run Charts                      -->
                 <!-- ════════════════════════════════════════════════════════ -->
                 <Grid Visibility="{Binding IsTabMetrics, Converter={StaticResource BoolToVisibility}}">
                     <Grid.RowDefinitions>
@@ -1087,20 +1140,20 @@
                             CornerRadius="12" Padding="18,12"
                             BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
                         <StackPanel>
-                            <TextBlock Text="PERFORMANCE METRICS" Style="{StaticResource HeadingSmall}"/>
-                            <TextBlock Text="Charts update after each completed simulation run"
+                            <TextBlock Text="INDIVIDUAL RUN METRICS" Style="{StaticResource HeadingSmall}"/>
+                            <TextBlock Text="Charts displaying the distribution for the latest simulation run"
                                        Style="{StaticResource KpiLabel}" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Row 1: Wait Time and Queue Length Trends -->
+                    <!-- Row 1: Wait Time and Turnaround Time Charts -->
                     <Grid Grid.Row="1" Margin="10,0,10,6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Wait Time Trend Chart -->
+                        <!-- Wait Time Chart -->
                         <Border Grid.Column="0" Margin="0,0,6,0"
                                 Background="{StaticResource CardGradient}"
                                 CornerRadius="12" Padding="16"
@@ -1111,22 +1164,20 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="AVG WAIT TIME (Wq) TREND" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="minutes per run (last 10 runs)" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    <TextBlock Text="CURRENT RUN WAIT TIMES (Wq)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="minutes per passenger" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
 
                                 <!-- LiveCharts Canvas -->
                                 <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
                                         BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding WaitTimeTrend}"
-                                                        XAxes="{Binding XAxes}"
-                                                        YAxes="{Binding YAxes}"
+                                    <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Queue Length Trend Chart -->
+                        <!-- Turnaround Time Chart -->
                         <Border Grid.Column="1" Margin="6,0,0,0"
                                 Background="{StaticResource CardGradient}"
                                 CornerRadius="12" Padding="16"
@@ -1137,16 +1188,14 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                    <TextBlock Text="AVG QUEUE LENGTH (Lq) TREND" Style="{StaticResource HeadingSmall}"/>
-                                    <TextBlock Text="passengers per run (last 10 runs)" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                    <TextBlock Text="CURRENT RUN TURNAROUND TIMES (W)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="minutes per passenger" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
 
                                 <!-- LiveCharts Canvas -->
                                 <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
                                         BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding QueueLengthTrend}"
-                                                        XAxes="{Binding XAxes}"
-                                                        YAxes="{Binding YAxes}"
+                                    <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>
@@ -1168,64 +1217,219 @@
                                     <!-- ρ -->
                                     <Border Style="{StaticResource KpiCard}" Margin="0,0,8,0">
                                         <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="Utilisation (ρ)" Style="{StaticResource KpiLabel}"/>
-                                                <TextBlock Text="λ / μ" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding KpiRho, Converter={StaticResource DoubleToFixed}}"
-                                                       FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
-                                                       Foreground="{Binding KpiRho, Converter={StaticResource UtilToBrush}}"
-                                                       VerticalAlignment="Center"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="24"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Utilisation (ρ)" Style="{StaticResource KpiLabel}"/>
+                                                    <TextBlock Text="λ / μ" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding KpiRho, Converter={StaticResource DoubleToFixed}}"
+                                                           FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
+                                                           Foreground="{Binding KpiRho, Converter={StaticResource UtilToBrush}}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <lvc:CartesianChart Grid.Row="1" Series="{Binding KpiRhoSeries}" XAxes="{Binding SparklineXAxes}" YAxes="{Binding SparklineYAxes}" Margin="0,8,0,0" TooltipPosition="Hidden"/>
                                         </Grid>
                                     </Border>
                                     <!-- Wq -->
                                     <Border Style="{StaticResource KpiCard}" Margin="0,0,8,0">
                                         <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="Avg Queue Wait (Wq)" Style="{StaticResource KpiLabel}"/>
-                                                <TextBlock Text="minutes" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding KpiWq, Converter={StaticResource DoubleToFixed}}"
-                                                       FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
-                                                       Foreground="{StaticResource AccentGoldBrush}"
-                                                       VerticalAlignment="Center"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="24"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Avg Queue Wait (Wq)" Style="{StaticResource KpiLabel}"/>
+                                                    <TextBlock Text="minutes" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding KpiWq, Converter={StaticResource DoubleToFixed}}"
+                                                           FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
+                                                           Foreground="{StaticResource AccentGoldBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <lvc:CartesianChart Grid.Row="1" Series="{Binding KpiWqSeries}" XAxes="{Binding SparklineXAxes}" YAxes="{Binding SparklineYAxes}" Margin="0,8,0,0" TooltipPosition="Hidden"/>
                                         </Grid>
                                     </Border>
                                     <!-- W -->
                                     <Border Style="{StaticResource KpiCard}" Margin="0,0,8,0">
                                         <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="Avg System Time (W)" Style="{StaticResource KpiLabel}"/>
-                                                <TextBlock Text="minutes" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding KpiW, Converter={StaticResource DoubleToFixed}}"
-                                                       FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
-                                                       Foreground="{StaticResource TextPrimaryBrush}"
-                                                       VerticalAlignment="Center"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="24"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Avg System Time (W)" Style="{StaticResource KpiLabel}"/>
+                                                    <TextBlock Text="minutes" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding KpiW, Converter={StaticResource DoubleToFixed}}"
+                                                           FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
+                                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <lvc:CartesianChart Grid.Row="1" Series="{Binding KpiWSeries}" XAxes="{Binding SparklineXAxes}" YAxes="{Binding SparklineYAxes}" Margin="0,8,0,0" TooltipPosition="Hidden"/>
                                         </Grid>
                                     </Border>
                                     <!-- L -->
                                     <Border Style="{StaticResource KpiCard}" Margin="0,0,0,0">
                                         <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="Avg in System (L)" Style="{StaticResource KpiLabel}"/>
-                                                <TextBlock Text="passengers" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
-                                            </StackPanel>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding KpiL, Converter={StaticResource DoubleToFixed}}"
-                                                       FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
-                                                       Foreground="{StaticResource AccentGreenBrush}"
-                                                       VerticalAlignment="Center"/>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="24"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="Avg in System (L)" Style="{StaticResource KpiLabel}"/>
+                                                    <TextBlock Text="passengers" FontSize="9" Foreground="{StaticResource TextMutedBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding KpiL, Converter={StaticResource DoubleToFixed}}"
+                                                           FontFamily="Segoe UI" FontSize="22" FontWeight="Bold"
+                                                           Foreground="{StaticResource AccentGreenBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Grid>
+                                            <lvc:CartesianChart Grid.Row="1" Series="{Binding KpiLSeries}" XAxes="{Binding SparklineXAxes}" YAxes="{Binding SparklineYAxes}" Margin="0,8,0,0" TooltipPosition="Hidden"/>
                                         </Grid>
                                     </Border>
                                 </UniformGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- ════════════════════════════════════════════════════════ -->
+                <!-- COMPARE TAB — Cross-model Comparisons                    -->
+                <!-- ════════════════════════════════════════════════════════ -->
+                <Grid Visibility="{Binding IsTabCompare, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Margin="10,10,10,6"
+                            Background="{StaticResource CardGradient}"
+                            CornerRadius="12" Padding="18,12"
+                            BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                        <StackPanel>
+                            <TextBlock Text="CROSS-MODEL COMPARISONS" Style="{StaticResource HeadingSmall}"/>
+                            <TextBlock Text="Analyze performance trends and compare Queue Models"
+                                       Style="{StaticResource KpiLabel}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Row 1: Model Comparison (Bar Charts) -->
+                    <Grid Grid.Row="1" Margin="10,0,10,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Compare Wq -->
+                        <Border Grid.Column="0" Margin="0,0,6,0"
+                                Background="{StaticResource CardGradient}"
+                                CornerRadius="12" Padding="16"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="MODEL WAIT TIME COMPARISON (Wq)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="Latest run for each model" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
+                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}"
+                                                        Margin="10"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Compare W -->
+                        <Border Grid.Column="1" Margin="6,0,0,0"
+                                Background="{StaticResource CardGradient}"
+                                CornerRadius="12" Padding="16"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="MODEL SYSTEM TIME COMPARISON (W)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="Latest run for each model" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
+                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}"
+                                                        Margin="10"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Row 2: Trend Over Time (Line Charts) -->
+                    <Grid Grid.Row="2" Margin="10,0,10,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Wait Time Trend -->
+                        <Border Grid.Column="0" Margin="0,0,6,0"
+                                Background="{StaticResource CardGradient}"
+                                CornerRadius="12" Padding="16"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="WAIT TIME TREND (Wq)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
+                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                    <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}"
+                                                        Margin="10"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Queue Length Trend -->
+                        <Border Grid.Column="1" Margin="6,0,0,0"
+                                Background="{StaticResource CardGradient}"
+                                CornerRadius="12" Padding="16"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                                    <TextBlock Text="QUEUE LENGTH TREND (Lq)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
+                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                                    <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}"
+                                                        Margin="10"/>
+                                </Border>
                             </Grid>
                         </Border>
                     </Grid>
@@ -1708,15 +1912,17 @@
 
                             <Separator Style="{StaticResource HSep}"/>
                             <TextBlock Text="QUICK NAVIGATE" Style="{StaticResource HeadingSmall}" Margin="0,6,0,10"/>
-                            <UniformGrid Columns="2" Rows="2">
+                            <UniformGrid Columns="2" Rows="3">
                                 <Button Content="🏠 Home" Style="{StaticResource ButtonReset}"
                                         Command="{Binding NavigateCommand}" CommandParameter="Home" Margin="0,0,6,6"/>
                                 <Button Content="🧮 Model" Style="{StaticResource ButtonReset}"
                                         Command="{Binding NavigateCommand}" CommandParameter="Model" Margin="0,0,0,6"/>
                                 <Button Content="📈 Metrics" Style="{StaticResource ButtonReset}"
-                                        Command="{Binding NavigateCommand}" CommandParameter="Metrics" Margin="0,0,6,0"/>
+                                        Command="{Binding NavigateCommand}" CommandParameter="Metrics" Margin="0,0,6,6"/>
+                                <Button Content="📊 Compare" Style="{StaticResource ButtonReset}"
+                                        Command="{Binding NavigateCommand}" CommandParameter="Compare" Margin="0,0,0,6"/>
                                 <Button Content="📋 Reports" Style="{StaticResource ButtonReset}"
-                                        Command="{Binding NavigateCommand}" CommandParameter="Reports" Margin="0,0,0,0"/>
+                                        Command="{Binding NavigateCommand}" CommandParameter="Reports" Margin="0,0,6,0"/>
                             </UniformGrid>
 
                             <Separator Style="{StaticResource HSep}"/>
@@ -1856,8 +2062,33 @@
                                     CornerRadius="14" Padding="24,20"
                                     BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
                                 <StackPanel>
-                                    <TextBlock Text="developed by rizwan,asad, anabia,ammara,maryam,momina,hasnain,ahmed hussain" Style="{StaticResource HeadingLarge}" FontSize="18" TextWrapping="Wrap"
-                                               Foreground="{StaticResource AccentGoldBrush}"/>
+                                    <TextBlock Text="DEVELOPED BY" Style="{StaticResource HeadingSmall}" Margin="0,0,0,12"/>
+                                    <WrapPanel Margin="0,0,0,12">
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Rizwan" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Asad" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Anabia" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Ammara" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Maryam" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Momina" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Hasnain" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="8,4" Margin="0,0,8,8">
+                                            <TextBlock Text="Ahmed Hussain" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </WrapPanel>
                                     <Border Height="2" CornerRadius="1" Background="{StaticResource GoldAccentGradient}"
                                             HorizontalAlignment="Left" Width="120" Margin="0,14,0,0"/>
                                 </StackPanel>
@@ -1948,18 +2179,18 @@
                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ArrivalTime, StringFormat={}{0:F3}}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Service Start" Style="{StaticResource KpiLabel}" Margin="0,0,0,10"/>
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ServiceStartTime, StringFormat=F3}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGoldBrush}" Margin="0,0,0,10"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ServiceStartTime, StringFormat={}{0:0.000;-0.000;'-'}}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGoldBrush}" Margin="0,0,0,10"/>
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Service End" Style="{StaticResource KpiLabel}" Margin="0,0,0,10"/>
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ServiceEndTime, StringFormat=F3}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenBrush}" Margin="0,0,0,10"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ExitTime, StringFormat={}{0:0.000;-0.000;'-'}}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="{StaticResource AccentGreenBrush}" Margin="0,0,0,10"/>
 
                 <Border Grid.Row="4" Grid.ColumnSpan="2" Height="1" Background="{StaticResource BorderBrush}" Margin="0,4,0,14"/>
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="Wait Time (Wq)" Style="{StaticResource KpiLabel}" Margin="0,0,0,10"/>
-                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding WaitTime, StringFormat={}{0:F3} min}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,10"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding WaitTime, StringFormat={}{0:0.000;-0.000;'-'} min}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,10"/>
 
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="Turnaround (W)" Style="{StaticResource KpiLabel}"/>
-                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding TurnaroundTime, StringFormat={}{0:F3} min}" Style="{StaticResource BodyText}" FontWeight="SemiBold"/>
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SystemTime, StringFormat={}{0:0.000;-0.000;'-'} min}" Style="{StaticResource BodyText}" FontWeight="SemiBold"/>
             </Grid>
         </StackPanel>
     </Border>

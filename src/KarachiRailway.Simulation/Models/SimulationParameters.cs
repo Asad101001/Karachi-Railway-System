@@ -27,14 +27,14 @@ public class SimulationParameters
     /// For M/G/1 and G/G/1 this controls service variability.
     /// </summary>
     [Range(0.01, 10.0, ErrorMessage = "Service CV must be > 0.")]
-    public double ServiceCv { get; set; } = 1.0;
+    public double ServiceCv { get; set; } = 1.5;
 
     /// <summary>
     /// Inter-arrival-time coefficient of variation (C_a).
     /// Used only for G/G/1.
     /// </summary>
     [Range(0.01, 10.0, ErrorMessage = "Arrival CV must be > 0.")]
-    public double ArrivalCv { get; set; } = 1.0;
+    public double ArrivalCv { get; set; } = 0.8;
 
     // ── Simulation Duration ──────────────────────────────────────────────────
 
