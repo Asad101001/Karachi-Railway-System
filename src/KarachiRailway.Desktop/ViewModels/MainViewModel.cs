@@ -54,8 +54,7 @@ public sealed class MainViewModel : ViewModelBase
         };
         _selectedSpeed = SpeedOptions[2];
 
-        StartCommand  = new AsyncRelayCommand(StartSimulationAsync,
-                            () => State is SimulationState.Idle or SimulationState.Completed);
+        StartCommand  = new AsyncRelayCommand(StartSimulationAsync);
         PauseCommand  = new RelayCommand(PausePlayback,  () => State == SimulationState.Running);
         ResumeCommand = new RelayCommand(ResumePlayback, () => State == SimulationState.Paused);
           StepCommand   = new RelayCommand(StepForwardPlayback,
@@ -845,7 +844,14 @@ public sealed class MainViewModel : ViewModelBase
 
     private async Task StartSimulationAsync()
     {
-        if (!ValidateParameters()) return;
+        if (!ValidateParameters())
+        {
+            PlainSummary = $"Cannot simulate: {ValidationError}";
+            return;
+        }
+
+        _cts?.Cancel();
+        _playback.Pause();
 
         _cts    = new CancellationTokenSource();
         _runner = new SimulationRunner(BuildParameters());
@@ -859,6 +865,7 @@ public sealed class MainViewModel : ViewModelBase
         PlaybackProgress = 0;
         ResetFlowDiagram();
         State = SimulationState.Running;
+        CommandManager.InvalidateRequerySuggested();
 
         try
         {
@@ -897,7 +904,7 @@ public sealed class MainViewModel : ViewModelBase
             _playback.Load(events);
             _playback.SpeedMultiplier = SelectedSpeed.Value;
             _playback.Start();
-            PlainSummary = "Playback started - watch passengers move through the diagram...";
+            PlainSummary = $"Simulation complete ({result.Passengers.Count} passengers). Animating flow...";
         }
         catch (OperationCanceledException)
         {
