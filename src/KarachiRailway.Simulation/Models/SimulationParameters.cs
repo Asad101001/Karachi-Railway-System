@@ -40,7 +40,7 @@ public class SimulationParameters
 
     /// <summary>Total simulated time in minutes.</summary>
     [Range(1, int.MaxValue, ErrorMessage = "Simulation duration must be at least 1 minute.")]
-    public int SimulationDurationMinutes { get; set; } = 120;
+    public int SimulationDurationMinutes { get; set; } = 10;
 
     // ── Flow Probabilities ───────────────────────────────────────────────────
 

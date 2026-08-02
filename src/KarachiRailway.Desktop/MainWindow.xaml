@@ -1170,9 +1170,9 @@
                                 </StackPanel>
 
                                 <!-- LiveCharts Canvas -->
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
-                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}"
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding CurrentRunWaitTimes}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>
@@ -1194,9 +1194,9 @@
                                 </StackPanel>
 
                                 <!-- LiveCharts Canvas -->
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
-                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}"
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding CurrentRunTurnaroundTimes}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>
@@ -1333,10 +1333,10 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="{Binding BlockMargin}" Width="{Binding WidthPos}">
+                                                <StackPanel Orientation="Vertical" Margin="{Binding BlockMargin}" Width="{Binding WidthPos}" VerticalAlignment="Center">
                                                     
                                                     <!-- Ellipsis Placeholder -->
-                                                    <TextBlock Text="..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18" Foreground="{StaticResource TextMutedBrush}" FontWeight="Bold">
+                                                    <TextBlock Text="..." HorizontalAlignment="Center" FontSize="20" Foreground="{StaticResource TextMutedBrush}" FontWeight="Bold" Margin="0,10,0,10">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
@@ -1362,28 +1362,41 @@
                                                             </Style>
                                                         </Grid.Style>
                                                         
-                                                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Background="{StaticResource PanelBackgroundBrush}" Height="30" CornerRadius="2">
-                                                            <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" FontWeight="SemiBold"/>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <!-- Timestamps above block -->
+                                                        <Grid Grid.Row="0" Margin="0,0,0,4">
+                                                            <TextBlock Text="{Binding StartTimeLabel}" HorizontalAlignment="Left" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Medium">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding ShowStartTime}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <TextBlock Text="{Binding EndTimeLabel}" HorizontalAlignment="Right" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="Medium"/>
+                                                        </Grid>
+
+                                                        <!-- Colored Gantt Block -->
+                                                        <Border Grid.Row="1" Background="#10B981" CornerRadius="6" Height="36" Padding="6,0" BorderThickness="1" BorderBrush="#059669">
+                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Label}" Foreground="#FFFFFF" FontSize="12" FontWeight="Bold"/>
+                                                                <TextBlock Text="{Binding DurationLabel}" Foreground="#D1FAE5" FontSize="10" Margin="4,1,0,0"/>
+                                                            </StackPanel>
                                                         </Border>
-                                                        
-                                                        <!-- Start Time -->
-                                                        <TextBlock Text="{Binding StartTimeLabel}" Margin="-10,35,0,0" HorizontalAlignment="Left" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding ShowStartTime}" Value="True">
-                                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                        
-                                                        <!-- End Time -->
-                                                        <TextBlock Text="{Binding EndTimeLabel}" Margin="0,35,-10,0" HorizontalAlignment="Right" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"/>
+
+                                                        <!-- Subtitle below block -->
+                                                        <TextBlock Grid.Row="2" Text="BUSY" HorizontalAlignment="Center" FontSize="9" Foreground="#10B981" FontWeight="Bold" Margin="0,3,0,0"/>
                                                     </Grid>
-                                                </Grid>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
@@ -1425,8 +1438,8 @@
                                     <TextBlock Text="MODEL UTILIZATION (Rho)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" Margin="10"/>
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareUtilizationSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1439,8 +1452,8 @@
                                     <TextBlock Text="MODEL NUMBER IN SYSTEM (L)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" Margin="10"/>
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareLSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1453,8 +1466,8 @@
                                     <TextBlock Text="MODEL WAIT TIME (Wq)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" Margin="10"/>
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareWqSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1467,8 +1480,8 @@
                                     <TextBlock Text="MODEL SYSTEM TIME (W)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Comparison using current parameters" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6" BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" Margin="10"/>
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding ModelCompareWSeries}" XAxes="{Binding ModelCompareXAxes}" YAxes="{Binding ModelCompareYAxes}" Margin="10"/>
                                 </Border>
                             </Grid>
                         </Border>
@@ -1495,9 +1508,9 @@
                                     <TextBlock Text="WAIT TIME TREND (Wq)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
-                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}"
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding WaitTimeTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>
@@ -1517,9 +1530,9 @@
                                     <TextBlock Text="QUEUE LENGTH TREND (Lq)" Style="{StaticResource HeadingSmall}"/>
                                     <TextBlock Text="Across last 10 simulation runs" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
                                 </StackPanel>
-                                <Border Grid.Row="1" Background="#040D04" CornerRadius="6"
-                                        BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
-                                    <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}"
+                                <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8"
+                                        BorderThickness="1" BorderBrush="#E2E8F0" MinHeight="190">
+                                    <lvc:CartesianChart Series="{Binding QueueLengthTrend}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
                                                         Margin="10"/>
                                 </Border>
                             </Grid>

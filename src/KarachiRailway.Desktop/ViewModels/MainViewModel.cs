@@ -80,6 +80,26 @@ public sealed class MainViewModel : ViewModelBase
         _playback.PlaybackCompleted += OnPlaybackCompleted;
 
         BuildFlowDiagram();
+
+        _ = RunInitialComparisonAsync();
+    }
+
+    private async Task RunInitialComparisonAsync()
+    {
+        try
+        {
+            var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1; p1.ServiceCv = 1.0; p1.ArrivalCv = 1.0;
+            var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1; p2.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p2.ArrivalCv = 1.0;
+            var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1; p3.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p3.ArrivalCv = (ArrivalCv == 1.0 ? 0.8 : ArrivalCv);
+
+            var (r1, r2, r3) = await Task.Run(() =>
+            {
+                return (new SimulationRunner(p1).Run(), new SimulationRunner(p2).Run(), new SimulationRunner(p3).Run());
+            });
+
+            UpdateCompareCharts(r1, r2, r3);
+        }
+        catch { }
     }
 
     public SimulationState State
@@ -389,53 +409,49 @@ public sealed class MainViewModel : ViewModelBase
 
     public ISeries[] ModelCompareWqSeries { get; } = new ISeries[]
     {
-        new LineSeries<double>
+        new ColumnSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "Wait Time (Wq)",
-            Fill = null,
-            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
-            GeometrySize = 10,
-            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
+            Fill = new SolidColorPaint(SKColor.Parse("#F59E0B")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
         }
     };
 
     public ISeries[] ModelCompareWSeries { get; } = new ISeries[]
     {
-        new LineSeries<double>
+        new ColumnSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "System Time (W)",
-            Fill = null,
-            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
-            GeometrySize = 10,
-            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
+            Fill = new SolidColorPaint(SKColor.Parse("#10B981")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
         }
     };
 
     public ISeries[] ModelCompareUtilizationSeries { get; } = new ISeries[]
     {
-        new LineSeries<double>
+        new ColumnSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "Utilization (Rho)",
-            Fill = null,
-            Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 3 },
-            GeometrySize = 10,
-            GeometryStroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 2 }
+            Fill = new SolidColorPaint(SKColor.Parse("#3B82F6")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
         }
     };
 
     public ISeries[] ModelCompareLSeries { get; } = new ISeries[]
     {
-        new LineSeries<double>
+        new ColumnSeries<double>
         {
             Values = new ObservableCollection<double> { 0, 0, 0 },
             Name = "Number in System (L)",
-            Fill = null,
-            Stroke = new SolidColorPaint(SKColors.Tomato) { StrokeThickness = 3 },
-            GeometrySize = 10,
-            GeometryStroke = new SolidColorPaint(SKColors.Tomato) { StrokeThickness = 2 }
+            Fill = new SolidColorPaint(SKColor.Parse("#8B5CF6")),
+            MaxBarWidth = 45,
+            Rx = 6, Ry = 6
         }
     };
 
@@ -443,13 +459,45 @@ public sealed class MainViewModel : ViewModelBase
     { 
         new Axis 
         { 
-            Labels = new ObservableCollection<string> { "M/M/1", "M/G/1", "G/G/1" },
-            LabelsRotation = 0
+            Labels = new[] { "M/M/1", "M/G/1", "G/G/1" },
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 12,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
         } 
     };
 
-    public Axis[] XAxes { get; } = new Axis[] { new Axis { Labels = new ObservableCollection<string>() } };
-    public Axis[] YAxes { get; } = new Axis[] { new Axis { Labeler = value => value.ToString("0.00") } };
+    public Axis[] ModelCompareYAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            MinLimit = 0,
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 11,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
+
+    public Axis[] XAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            Labels = new ObservableCollection<string>(),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 11,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F1F5F9"))
+        } 
+    };
+    public Axis[] YAxes { get; } = new Axis[] 
+    { 
+        new Axis 
+        { 
+            MinLimit = 0,
+            Labeler = value => value.ToString("0.00"),
+            LabelsPaint = new SolidColorPaint(SKColor.Parse("#475569")),
+            TextSize = 11,
+            SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#E2E8F0"))
+        } 
+    };
 
     private SpeedOption _selectedSpeed;
     public SpeedOption SelectedSpeed
@@ -536,7 +584,7 @@ public sealed class MainViewModel : ViewModelBase
         set => SetProperty(ref _arrivalCv, value);
     }
 
-    private int _durationMinutes = 120;
+    private int _durationMinutes = 10;
     public int DurationMinutes
     {
         get => _durationMinutes;
@@ -715,6 +763,20 @@ public sealed class MainViewModel : ViewModelBase
 
             UpdateChartData();
             BuildGanttChart();
+
+            var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1; p1.ServiceCv = 1.0; p1.ArrivalCv = 1.0;
+            var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1; p2.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p2.ArrivalCv = 1.0;
+            var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1; p3.ServiceCv = (ServiceCv == 1.0 ? 0.5 : ServiceCv); p3.ArrivalCv = (ArrivalCv == 1.0 ? 0.8 : ArrivalCv);
+
+            var (r1, r2, r3) = await Task.Run(() =>
+            {
+                var sim1 = result.ModelType == QueueModelType.MM1 ? result : new SimulationRunner(p1).Run();
+                var sim2 = result.ModelType == QueueModelType.MG1 ? result : new SimulationRunner(p2).Run();
+                var sim3 = result.ModelType == QueueModelType.GG1 ? result : new SimulationRunner(p3).Run();
+                return (sim1, sim2, sim3);
+            });
+
+            UpdateCompareCharts(r1, r2, r3);
 
             if (TraceModeEnabled)
             {
@@ -1048,7 +1110,7 @@ public sealed class MainViewModel : ViewModelBase
         var passengers = CompletedPassengers.ToList();
         int total = passengers.Count;
         const int ShowEach = 6;
-        double multiplier = 12.0;
+        double multiplier = 40.0;
 
         var shown = new List<(Passenger p, bool isEllipsis)>();
         int firstCount = Math.Min(ShowEach, total);
@@ -1073,7 +1135,7 @@ public sealed class MainViewModel : ViewModelBase
                 { 
                     IsEllipsis = true, 
                     IsNotEllipsis = false,
-                    WidthPos = 40,
+                    WidthPos = 50,
                     BlockMargin = new Thickness(15, 0, 15, 0)
                 });
                 isFirstAfterEllipsis = true;
@@ -1090,11 +1152,12 @@ public sealed class MainViewModel : ViewModelBase
             GanttItems.Add(new GanttItem
             {
                 Label = $"C{p.Id}",
-                WidthPos = Math.Max(20, svcDuration * multiplier),
+                DurationLabel = $"({svcDuration:F1}m)",
+                WidthPos = Math.Max(85, svcDuration * multiplier),
                 BlockMargin = new Thickness(gap * multiplier, 0, 0, 0),
-                StartTimeLabel = serviceStart.ToString("F0"),
-                EndTimeLabel = serviceEnd.ToString("F0"),
-                ShowStartTime = i == 0 || isFirstAfterEllipsis || gap > 0.1,
+                StartTimeLabel = $"{serviceStart:F1}m",
+                EndTimeLabel = $"{serviceEnd:F1}m",
+                ShowStartTime = i == 0 || isFirstAfterEllipsis || gap > 0.05,
                 IsEllipsis = false,
                 IsNotEllipsis = true
             });
@@ -1158,46 +1221,34 @@ public sealed class MainViewModel : ViewModelBase
             }
         }
 
-        // Update Model Compare Charts
-        // Update Model Compare Charts dynamically using current parameters
-        try
-        {
-            if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
-                ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
-                ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
-                ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
-            {
-                var p1 = BuildParameters(); p1.ModelType = QueueModelType.MM1;
-                var p2 = BuildParameters(); p2.ModelType = QueueModelType.MG1;
-                var p3 = BuildParameters(); p3.ModelType = QueueModelType.GG1;
-                
-                // For true comparison, if CVs are exactly 1.0 (which defaults to M/M/1), we temporarily alter them so the user sees a difference in the charts, 
-                // OR we just use the user's parameters. Using user's parameters is better, but if they are 1.0, M/M/1, M/G/1 and G/G/1 are identical.
-                
-                var r1 = new SimulationRunner(p1).Run();
-                var r2 = new SimulationRunner(p2).Run();
-                var r3 = new SimulationRunner(p3).Run();
+    }
 
-                wqCompareVals[0] = r1.AvgQueueWaitTime;
-                wqCompareVals[1] = r2.AvgQueueWaitTime;
-                wqCompareVals[2] = r3.AvgQueueWaitTime;
-
-                wCompareVals[0] = r1.AvgSystemTime;
-                wCompareVals[1] = r2.AvgSystemTime;
-                wCompareVals[2] = r3.AvgSystemTime;
-                
-                rhoCompareVals[0] = r1.Utilization;
-                rhoCompareVals[1] = r2.Utilization;
-                rhoCompareVals[2] = r3.Utilization;
-                
-                lCompareVals[0] = r1.AvgNumberInSystem;
-                lCompareVals[1] = r2.AvgNumberInSystem;
-                lCompareVals[2] = r3.AvgNumberInSystem;
-            }
-        }
-        catch 
+    private void UpdateCompareCharts(SimulationResult r1, SimulationResult r2, SimulationResult r3)
+    {
+        if (ModelCompareWqSeries[0].Values is ObservableCollection<double> wqCompareVals &&
+            ModelCompareWSeries[0].Values is ObservableCollection<double> wCompareVals &&
+            ModelCompareUtilizationSeries[0].Values is ObservableCollection<double> rhoCompareVals &&
+            ModelCompareLSeries[0].Values is ObservableCollection<double> lCompareVals)
         {
-            // Ignore exception during intermediate typing states (e.g. CV = 0)
+            wqCompareVals.Clear();
+            wqCompareVals.Add(double.IsNaN(r1.AvgQueueWaitTime) ? 0 : r1.AvgQueueWaitTime);
+            wqCompareVals.Add(double.IsNaN(r2.AvgQueueWaitTime) ? 0 : r2.AvgQueueWaitTime);
+            wqCompareVals.Add(double.IsNaN(r3.AvgQueueWaitTime) ? 0 : r3.AvgQueueWaitTime);
+
+            wCompareVals.Clear();
+            wCompareVals.Add(double.IsNaN(r1.AvgSystemTime) ? 0 : r1.AvgSystemTime);
+            wCompareVals.Add(double.IsNaN(r2.AvgSystemTime) ? 0 : r2.AvgSystemTime);
+            wCompareVals.Add(double.IsNaN(r3.AvgSystemTime) ? 0 : r3.AvgSystemTime);
+            
+            rhoCompareVals.Clear();
+            rhoCompareVals.Add(double.IsNaN(r1.Utilization) ? 0 : r1.Utilization);
+            rhoCompareVals.Add(double.IsNaN(r2.Utilization) ? 0 : r2.Utilization);
+            rhoCompareVals.Add(double.IsNaN(r3.Utilization) ? 0 : r3.Utilization);
+            
+            lCompareVals.Clear();
+            lCompareVals.Add(double.IsNaN(r1.AvgNumberInSystem) ? 0 : r1.AvgNumberInSystem);
+            lCompareVals.Add(double.IsNaN(r2.AvgNumberInSystem) ? 0 : r2.AvgNumberInSystem);
+            lCompareVals.Add(double.IsNaN(r3.AvgNumberInSystem) ? 0 : r3.AvgNumberInSystem);
         }
     }
 
@@ -1456,6 +1507,7 @@ public record SpeedOption(string Label, double Value)
 public class GanttItem
 {
     public string Label { get; set; } = string.Empty;
+    public string DurationLabel { get; set; } = string.Empty;
     public double WidthPos { get; set; }
     public Thickness BlockMargin { get; set; }
     public string StartTimeLabel { get; set; } = string.Empty;
