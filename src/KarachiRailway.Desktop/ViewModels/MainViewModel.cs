@@ -1437,9 +1437,9 @@ public sealed class MainViewModel : ViewModelBase
             rhoCompareVals.Add(r3 != null && !double.IsNaN(r3.Utilization) ? Math.Round(r3.Utilization, 3) : 0);
 
             lCompareVals.Clear();
-            lCompareVals.Add(double.IsNaN(r1.AvgNumberInSystem) ? 0 : r1.AvgNumberInSystem);
-            lCompareVals.Add(double.IsNaN(r2.AvgNumberInSystem) ? 0 : r2.AvgNumberInSystem);
-            lCompareVals.Add(double.IsNaN(r3.AvgNumberInSystem) ? 0 : r3.AvgNumberInSystem);
+            lCompareVals.Add(r1 != null && !double.IsNaN(r1.AvgNumberInSystem) ? Math.Round(r1.AvgNumberInSystem, 3) : 0);
+            lCompareVals.Add(r2 != null && !double.IsNaN(r2.AvgNumberInSystem) ? Math.Round(r2.AvgNumberInSystem, 3) : 0);
+            lCompareVals.Add(r3 != null && !double.IsNaN(r3.AvgNumberInSystem) ? Math.Round(r3.AvgNumberInSystem, 3) : 0);
         }
     }
 
