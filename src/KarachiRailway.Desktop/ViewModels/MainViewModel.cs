@@ -139,6 +139,12 @@ public sealed class MainViewModel : ViewModelBase
                 OnPropertyChanged(nameof(IsMG1));
                 OnPropertyChanged(nameof(IsGG1));
                 OnPropertyChanged(nameof(QueueModelHeaderText));
+                
+                // Update table with dummy data to preview model behavior
+                if (ModellingRows.Count > 0)
+                {
+                    BuildModellingTable(new SimulationResult { TotalArrived = 15 });
+                }
             }
         }
     }
@@ -278,7 +284,10 @@ public sealed class MainViewModel : ViewModelBase
 
     // ── Table Modeling ───────────────────────────────────────────────────────
     public ObservableCollection<ModellingRowViewModel> ModellingRows { get; } = new();
-    
+
+    // ── Gantt Chart ──────────────────────────────────────────────────────────
+    public ObservableCollection<GanttItem> GanttItems { get; } = new();
+
     // ── Passenger History ────────────────────────────────────────────────────
     public ObservableCollection<Passenger> CompletedPassengers { get; } = new();
 
@@ -339,21 +348,27 @@ public sealed class MainViewModel : ViewModelBase
 
     public ISeries[] CurrentRunWaitTimes { get; } = new ISeries[]
     {
-        new ColumnSeries<double>
+        new LineSeries<double>
         {
             Values = new ObservableCollection<double>(),
             Name = "Wait Time",
-            Fill = new SolidColorPaint(SKColors.MediumSeaGreen)
+            Stroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 3 },
+            Fill = new SolidColorPaint(SKColors.MediumSeaGreen.WithAlpha(50)),
+            GeometrySize = 4,
+            GeometryStroke = new SolidColorPaint(SKColors.MediumSeaGreen) { StrokeThickness = 2 }
         }
     };
 
     public ISeries[] CurrentRunTurnaroundTimes { get; } = new ISeries[]
     {
-        new ColumnSeries<double>
+        new LineSeries<double>
         {
             Values = new ObservableCollection<double>(),
             Name = "Turnaround Time",
-            Fill = new SolidColorPaint(SKColors.Gold)
+            Stroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 3 },
+            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)),
+            GeometrySize = 4,
+            GeometryStroke = new SolidColorPaint(SKColors.Gold) { StrokeThickness = 2 }
         }
     };
 
@@ -662,6 +677,7 @@ public sealed class MainViewModel : ViewModelBase
             }
 
             UpdateChartData();
+            BuildGanttChart();
 
             if (TraceModeEnabled)
             {
@@ -858,25 +874,34 @@ public sealed class MainViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Builds a realistic M/M/1 per-customer modelling table.
-    /// Uses Poisson arrivals and exponential service times derived from
-    /// lambda / mu parameters, mirroring the reference spreadsheet layout.
+    /// Builds the per-customer modelling table, using the correct service-time
+    /// distribution for the selected queue model:
+    ///   M/M/1 → Exponential
+    ///   M/G/1 → Gamma (shape = 1/Cs², rate = mu/shape)
+    ///   G/G/1 → Gamma for service AND Gamma for inter-arrival (using Ca²)
     /// </summary>
     private void BuildModellingTable(SimulationResult result)
     {
         ModellingRows.Clear();
 
         int rowCount = Math.Min(25, Math.Max(8, result.TotalArrived > 0 ? result.TotalArrived : 15));
-        var rng = new Random(42);  // fixed seed for reproducibility
+        var rng = new Random(42);
 
         double lambda  = ArrivalRate;
         double mu      = ServiceRate;
-        double meanIAT = lambda > 0 ? 1.0 / lambda * 60 : 5.0;  // inter-arrival in minutes
-        double meanSvc = mu    > 0 ? 1.0 / mu    * 60 : 4.0;   // service time in minutes
+        double cs      = ServiceCv;
+        double ca      = ArrivalCv;
+        double meanIAT = lambda > 0 ? 1.0 / lambda * 60 : 5.0;
+        double meanSvc = mu    > 0 ? 1.0 / mu    * 60 : 4.0;
 
-        double currentTime = 0;   // cumulative arrival time
-        double serverFree  = 0;   // when the server next becomes free
-        double cumProb     = 0;   // running cumulative probability
+        // For G/G/1: inter-arrival shape from Ca²
+        double arrivalShape = ca > 0 ? 1.0 / (ca * ca) : 1.0;
+        // For M/G/1 & G/G/1: service shape from Cs²
+        double serviceShape = cs > 0 ? 1.0 / (cs * cs) : 1.0;
+
+        double currentTime = 0;
+        double serverFree  = 0;
+        double cumProb     = 0;
 
         double totalWait       = 0;
         double totalTurnaround = 0;
@@ -885,16 +910,27 @@ public sealed class MainViewModel : ViewModelBase
 
         for (int i = 1; i <= rowCount; i++)
         {
-            // Poisson inter-arrival: -ln(U)/lambda
-            double u1         = rng.NextDouble();
-            double interArrival = i == 1 ? 0 : Math.Max(0, -Math.Log(u1) * meanIAT);
+            double u1 = rng.NextDouble();
+            double u2 = rng.NextDouble();
+
+            // Inter-arrival time
+            double interArrival;
+            if (i == 1)
+                interArrival = 0;
+            else if (IsGG1 && ca > 0 && Math.Abs(ca - 1.0) > 0.01)
+                interArrival = Math.Max(0, SampleGamma(rng, arrivalShape, meanIAT / arrivalShape));
+            else
+                interArrival = Math.Max(0, -Math.Log(u1) * meanIAT); // Exponential (M/M/1 & M/G/1)
+
             currentTime += interArrival;
 
-            // Exponential service: -ln(U)/mu
-            double u2      = rng.NextDouble();
-            double svcTime = Math.Max(0.1, -Math.Log(u2) * meanSvc);
+            // Service time
+            double svcTime;
+            if (IsMM1 || Math.Abs(cs - 1.0) < 0.01)
+                svcTime = Math.Max(0.1, -Math.Log(u2) * meanSvc);
+            else
+                svcTime = Math.Max(0.1, SampleGamma(rng, serviceShape, meanSvc / serviceShape));
 
-            // Schedule timing
             double startTime = Math.Max(currentTime, serverFree);
             double endTime   = startTime + svcTime;
             serverFree = endTime;
@@ -903,7 +939,6 @@ public sealed class MainViewModel : ViewModelBase
             double turnaround = endTime   - currentTime;
             double response   = svcTime;
 
-            // Cumulative probability (exponential CDF simplified)
             double prevCumProb = cumProb;
             cumProb = 1.0 - Math.Exp(-lambda * (i / (double)rowCount) * mu);
             cumProb = Math.Min(cumProb, 0.9999);
@@ -937,7 +972,81 @@ public sealed class MainViewModel : ViewModelBase
             ModellingAvgWait        = Math.Round(totalWait        / rowCount, 3);
             ModellingAvgTurnaround  = Math.Round(totalTurnaround  / rowCount, 3);
             ModellingAvgResponse    = Math.Round(totalResponse    / rowCount, 3);
-            ModellingAvgInterArrival = Math.Round(totalIAT         / Math.Max(1, rowCount - 1), 3);
+            ModellingAvgInterArrival = Math.Round(totalIAT        / Math.Max(1, rowCount - 1), 3);
+        }
+    }
+
+    /// <summary>Samples from a Gamma distribution via the Marsaglia-Tsang method.</summary>
+    private static double SampleGamma(Random rng, double shape, double scale)
+    {
+        if (shape <= 0 || scale <= 0) return 0;
+        if (shape < 1) return SampleGamma(rng, shape + 1, scale) * Math.Pow(rng.NextDouble(), 1.0 / shape);
+        double d = shape - 1.0 / 3.0;
+        double c = 1.0 / Math.Sqrt(9.0 * d);
+        while (true)
+        {
+            double x, v;
+            do { x = NextGaussian(rng); v = 1.0 + c * x; } while (v <= 0);
+            v = v * v * v;
+            double u = rng.NextDouble();
+            double x2 = x * x;
+            if (u < 1.0 - 0.0331 * (x2 * x2)) return d * v * scale;
+            if (Math.Log(u) < 0.5 * x2 + d * (1.0 - v + Math.Log(v))) return d * v * scale;
+        }
+    }
+
+    private static double NextGaussian(Random rng)
+    {
+        double u1 = 1.0 - rng.NextDouble();
+        double u2 = 1.0 - rng.NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2);
+    }
+
+    /// <summary>Builds the Gantt chart from completed passengers — first 5 + last 5.</summary>
+    private void BuildGanttChart()
+    {
+        GanttItems.Clear();
+        if (CompletedPassengers.Count == 0) return;
+
+        var passengers = CompletedPassengers.ToList();
+        int total = passengers.Count;
+        const int ShowEach = 5;
+
+        var shown = new List<(Passenger p, bool isEllipsis)>();
+        int firstCount = Math.Min(ShowEach, total);
+        for (int i = 0; i < firstCount; i++) shown.Add((passengers[i], false));
+
+        if (total > ShowEach * 2)
+            shown.Add((passengers[0], true)); // ellipsis marker
+
+        int lastStart = Math.Max(firstCount, total - ShowEach);
+        for (int i = lastStart; i < total; i++) shown.Add((passengers[i], false));
+
+        int row = 0;
+        foreach (var (p, isEllipsis) in shown)
+        {
+            if (isEllipsis)
+            {
+                GanttItems.Add(new GanttItem { IsEllipsis = true, Row = row++ });
+                continue;
+            }
+
+            double arrivalTime  = p.ArrivalTime;
+            double serviceStart = p.ServiceStartTime > 0 ? p.ServiceStartTime : arrivalTime;
+            double serviceEnd   = p.ExitTime   > 0 ? p.ExitTime   : serviceStart;
+
+            GanttItems.Add(new GanttItem
+            {
+                Row          = row++,
+                PassengerId  = p.Id,
+                ArrivalTime  = arrivalTime,
+                WaitStart    = arrivalTime,
+                ServiceStart = serviceStart,
+                ServiceEnd   = serviceEnd,
+                WaitDuration = Math.Max(0, serviceStart - arrivalTime),
+                SvcDuration  = Math.Max(0, serviceEnd - serviceStart),
+                IsEllipsis   = false,
+            });
         }
     }
 
@@ -1262,4 +1371,18 @@ public sealed class MainViewModel : ViewModelBase
 public record SpeedOption(string Label, double Value)
 {
     public override string ToString() => Label;
+}
+
+/// <summary>Represents an item in the Gantt chart.</summary>
+public class GanttItem
+{
+    public int Row { get; set; }
+    public int PassengerId { get; set; }
+    public double ArrivalTime { get; set; }
+    public double WaitStart { get; set; }
+    public double ServiceStart { get; set; }
+    public double ServiceEnd { get; set; }
+    public double WaitDuration { get; set; }
+    public double SvcDuration { get; set; }
+    public bool IsEllipsis { get; set; }
 }

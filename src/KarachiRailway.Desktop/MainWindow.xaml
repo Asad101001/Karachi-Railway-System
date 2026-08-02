@@ -1072,7 +1072,7 @@
 
                                 <!-- Empty state -->
                                 <Border Padding="40,30"
-                                        Visibility="{Binding ModellingRows.Count, Converter={StaticResource InverseBoolToVisibility}}">
+                                        Visibility="{Binding ModellingRows.Count, Converter={StaticResource IntToInverseVisibility}}">
                                     <StackPanel HorizontalAlignment="Center">
                                         <TextBlock Text="🧮" FontSize="48" HorizontalAlignment="Center"/>
                                         <TextBlock Text="No simulation data yet" Style="{StaticResource HeadingMedium}"
@@ -1131,6 +1131,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -1303,6 +1304,84 @@
                                         </Grid>
                                     </Border>
                                 </UniformGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Row 3: Gantt Chart -->
+                    <Grid Grid.Row="3" Margin="10,0,10,8">
+                        <Border Background="{StaticResource CardGradient}"
+                                CornerRadius="12" Padding="16"
+                                BorderThickness="1" BorderBrush="{StaticResource BorderBrush}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                
+                                <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                                    <TextBlock Text="GANTT CHART (ARRIVAL, WAIT, SERVICE)" Style="{StaticResource HeadingSmall}"/>
+                                    <TextBlock Text="Timeline of first and last few passengers" Style="{StaticResource KpiLabel}" Margin="0,3,0,0"/>
+                                </StackPanel>
+
+                                <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding GanttItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8" Height="24">
+                                                    <Grid.Style>
+                                                        <Style TargetType="Grid">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsEllipsis}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Grid.Style>
+                                                    
+                                                    <StackPanel Orientation="Horizontal" Width="100" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding PassengerId, StringFormat='Pax #{0}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" FontFamily="Segoe UI" FontWeight="Bold"/>
+                                                    </StackPanel>
+                                                    
+                                                    <Canvas Margin="100,0,0,0">
+                                                        <!-- Arrival Marker -->
+                                                        <Ellipse Width="6" Height="6" Fill="#4B5563" Canvas.Left="{Binding ArrivalTime, Converter={StaticResource Multiply}, ConverterParameter=10}" Canvas.Top="9"/>
+                                                        
+                                                        <!-- Wait Bar -->
+                                                        <Border Height="12" Canvas.Left="{Binding WaitStart, Converter={StaticResource Multiply}, ConverterParameter=10}" Canvas.Top="6" 
+                                                                Width="{Binding WaitDuration, Converter={StaticResource Multiply}, ConverterParameter=10}" 
+                                                                Background="#F59E0B" Opacity="0.7" CornerRadius="4,0,0,4"/>
+                                                        
+                                                        <!-- Service Bar -->
+                                                        <Border Height="12" Canvas.Left="{Binding ServiceStart, Converter={StaticResource Multiply}, ConverterParameter=10}" Canvas.Top="6" 
+                                                                Width="{Binding SvcDuration, Converter={StaticResource Multiply}, ConverterParameter=10}" 
+                                                                Background="#22C55E" CornerRadius="0,4,4,0"/>
+                                                    </Canvas>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                                
+                                <!-- Ellipsis Marker for middle skipped items -->
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding GanttItems}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="..." Margin="35,0,0,8" Foreground="{StaticResource TextMutedBrush}" FontSize="18" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsEllipsis}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </Grid>
                         </Border>
                     </Grid>
@@ -1574,7 +1653,7 @@
 
                                 <!-- Empty state -->
                                 <Border Padding="40,40"
-                                        Visibility="{Binding RunHistory.Count, Converter={StaticResource InverseBoolToVisibility}}">
+                                        Visibility="{Binding RunHistory.Count, Converter={StaticResource IntToInverseVisibility}}">
                                     <StackPanel HorizontalAlignment="Center">
                                         <TextBlock Text="📋" FontSize="56" HorizontalAlignment="Center"/>
                                         <TextBlock Text="No runs yet" Style="{StaticResource HeadingMedium}"
@@ -1692,7 +1771,7 @@
                                 </ItemsControl>
 
                                 <!-- Empty state -->
-                                <Border Padding="40,40" Visibility="{Binding CompletedPassengers.Count, Converter={StaticResource InverseBoolToVisibility}}">
+                                <Border Padding="40,40" Visibility="{Binding CompletedPassengers.Count, Converter={StaticResource IntToInverseVisibility}}">
                                     <StackPanel HorizontalAlignment="Center">
                                         <TextBlock Text="👥" FontSize="56" HorizontalAlignment="Center"/>
                                         <TextBlock Text="No customer data" Style="{StaticResource HeadingMedium}" HorizontalAlignment="Center" Margin="0,14,0,4" Foreground="{StaticResource TextSecondaryBrush}"/>
